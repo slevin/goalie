@@ -41,33 +41,51 @@
 
 (defun goalie-execute ()
   (interactive)
-  (message "execute"))
+  (goalie--handle-execute))
 
 
-(defun goalie-initialize-ui ()
+(defun goalie--initialize-ui ()
   (switch-to-buffer "*goalie*")
   (goalie-mode))
 
-(defun goalie-render-ui ()
+(defun goalie--render-ui ()
   (let ((inhibit-read-only t))
     (erase-buffer)
-    (insert "Yesterday's Commitments (Date goes here)\n")
-    (insert "some lines about commitments\n\n")
+    (insert "Open Commitments\n")
+    (insert "None\n")
+    (insert "\n")
     (insert "Today's Commitments (Date goes here)\n")
-    (insert "some lines about todays commitments\n")))
+    (insert (hilight-line "-- Add Commitment --"))))
 
-(defun goalie-start (init-fun render-fun)
-  (funcall init-fun)
-  (funcall render-fun)
+(defun goalie--handle-execute ()
+  (funcall goalie--prompt-for-new-commitment-fun)
   )
+
+(defun goalie--prompt-for-new-commitment ()
+  (read-string "What is your commitment? ")
+  )
+
+(defun hilight-line (line)
+  (propertize line 'face '((:foreground "red"))))
+
+(defvar goalie--prompt-for-new-commitment-fun #'ignore)
+
+(defun goalie-start (init-fun
+                     render-fun
+                     prompt-fun)
+  (setq goalie--prompt-for-new-commitment-fun prompt-fun)
+  (funcall init-fun)
+  (funcall render-fun))
+
 ;; could have rerender whole thing based on updates
 ;; first is given a buffer var draw in
 (defun goalie ()
   "Start goalie."
   (interactive)
   (goalie-start
-   'initialize-ui #'goalie-initialize-ui
-   'render-ui     #'goalie-render-ui)
+   #'goalie--initialize-ui
+   #'goalie--render-ui
+   #'goalie--prompt-for-new-commitment)
 
   ;; start up goalie "object"
   ;; creates/opens buffer
