@@ -4,7 +4,7 @@
 
 ;; Author: Sean Levin
 ;; Created: 23 Nov 2014
-;; Version: ???????
+;; Version: 20141123
 ;; URL: https://github.com/slevin/goalie
 
 ;;; Commentary:
@@ -56,13 +56,19 @@
     (insert "Today's Commitments (Date goes here)\n")
     (insert "some lines about todays commitments\n")))
 
+(defun goalie-start (init-fun render-fun)
+  (funcall init-fun)
+  (funcall render-fun)
+  )
 ;; could have rerender whole thing based on updates
 ;; first is given a buffer var draw in
 (defun goalie ()
   "Start goalie."
   (interactive)
-  (goalie-initialize-ui)
-  (goalie-render-ui)
+  (goalie-start
+   'initialize-ui #'goalie-initialize-ui
+   'render-ui     #'goalie-render-ui)
+
   ;; start up goalie "object"
   ;; creates/opens buffer
 
@@ -70,4 +76,5 @@
 
   ;; calls render method on parts
   )
+
 ;;; goalie.el ends here

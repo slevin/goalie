@@ -1,0 +1,17 @@
+task :test do
+	sh 'cask exec ert-runner'
+end
+
+task :test_init do
+	sh 'cask exec ert-runner init'
+end
+
+task :cask_init do
+	sh 'cask init --dev'
+end
+
+# could add dependency for cask file to init
+# dependency for test directory for test init
+# could also create a .ert-runner file with -l whatever
+# some thoughts for the future
+#
