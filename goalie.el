@@ -17,6 +17,8 @@
 
 ;;; Code:
 
+(provide 'goalie)
+
 (defvar goalie-mode-map
   (let ((map (make-keymap)))
     (suppress-keymap map t)
