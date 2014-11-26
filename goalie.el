@@ -1,18 +1,104 @@
-  require(goalie)
-  eval-buffer(#<buffer  *load*-468833> nil "/Users/slevin/wrk/goalie/features/support/env.el" nil t)
-  load-with-code-conversion("/Users/slevin/wrk/goalie/features/support/env.el" "/Users/slevin/wrk/goalie/features/support/env.el" nil t)
-  load("/Users/slevin/wrk/goalie/features/support/env" nil t)
-  ecukes-load-support()
-  ecukes-load()
-  ecukes-cli/run("features")
-  apply(ecukes-cli/run "features")
-  commander--handle-command(nil)
-  commander-parse(nil)
-  (if commander-parsing-done nil (commander-parse (or commander-args (cdr command-line-args-left))))
-  (progn (setq commander-default-config nil) (setq commander-options nil) (setq commander-commands nil) (setq commander-name nil) (setq commander-description nil) (setq commander-default-command nil) (setq commander-no-command nil) (setq commander-parsing-done nil) (-each (quote ((name "ecukes") (description "Cucumber for Emacs") (config ".ecukes") (default ecukes-cli/run "features") (command "new" ecukes-cli/new) (command "list-steps" ecukes-cli/list-steps) (command "list-reporters" ecukes-cli/list-reporters) (option "--with-doc" ecukes-cli/with-doc) (option "--with-file" ecukes-cli/with-file) (option "--verbose" ecukes-cli/verbose) (option "--quiet" ecukes-cli/quiet) (option "-h, --help" ecukes-cli/help) (option "--debug" ecukes-cli/debug) (option "--tags <tag-string>" ecukes-cli/tags) (option "--script" ecukes-cli/script) (option "--no-win" ecukes-cli/no-win) (option "--win" ecukes-cli/win) (option "--reporter <reporter>, -r <reporter>" ecukes-cli/reporter) (option "-t <seconds>, --timeout <seconds>" ecukes-cli/timeout) (option "-p <*>, --patterns <*>" ecukes-cli/patterns) (option "-a <*>, --anti-patterns <*>" ecukes-cli/anti-patterns) (option "-f, --only-failing" ecukes-cli/only-failing) (option "-l [file], --error-log [file]" ecukes-cli/error-log))) (function (lambda (form) (cond ((eql (car form) (quote option)) (progn (let* ... ...))) ((eql (car form) (quote command)) (progn (let* ... ...))) ((eql (car form) (quote parse)) (progn (let* ... ... ...))) ((eql (car form) (quote name)) (progn (let* ... ...))) ((eql (car form) (quote description)) (progn (let* ... ...))) ((eql (car form) (quote config)) (progn (let* ... ...))) ((eql (car form) (quote default)) (progn (let* ... ...))) (t (error "Unknown directive: %S" form)))))) (if commander-parsing-done nil (commander-parse (or commander-args (cdr command-line-args-left)))))
-  eval-buffer(#<buffer  *load*> nil "/Users/slevin/wrk/goalie/.cask/24.3.1/elpa/ecukes-20140403.2248/ecukes-cli.el" nil t)
-  load-with-code-conversion("/Users/slevin/wrk/goalie/.cask/24.3.1/elpa/ecukes-20140403.2248/ecukes-cli.el" "/Users/slevin/wrk/goalie/.cask/24.3.1/elpa/ecukes-20140403.2248/ecukes-cli.el" nil t)
-  load("/Users/slevin/wrk/goalie/.cask/24.3.1/elpa/ecukes-20140403.2248/ecukes-cli.el" nil t t)
-  command-line-1(("-scriptload" "/Users/slevin/wrk/goalie/.cask/24.3.1/elpa/ecukes-20140403.2248/ecukes-cli.el"))
-  command-line()
-  normal-top-level()
+;;; goalie.el --- Emacs based goal tracking application
+
+;; Copyright (C) 2014 Sean Levin
+
+;; Author: Sean Levin
+;; Created: 23 Nov 2014
+;; Version: 20141123
+;; URL: https://github.com/slevin/goalie
+
+;;; Commentary:
+;; Some description here
+
+;; more description
+
+;;; Change Log:
+;; none
+
+;;; Code:
+
+(defvar goalie-mode-map
+  (let ((map (make-keymap)))
+    (suppress-keymap map t)
+    (define-key map (kbd "n") 'goalie-goto-next)
+    (define-key map (kbd "p") 'goalie-goto-previous)
+    (define-key map (kbd "RET") 'goalie-execute)
+    map)
+  "Goalie key map.")
+
+
+(define-derived-mode goalie-mode special-mode "Goalie"
+  "Major mode for Goalie."
+  )
+
+(defun goalie-goto-next ()
+  (interactive)
+  (message "goto next"))
+
+(defun goalie-goto-previous ()
+  (interactive)
+  (message "goto previous"))
+
+(defun goalie-execute ()
+  (interactive)
+  (goalie--handle-execute))
+
+
+(defun goalie--initialize-ui ()
+  (switch-to-buffer "*goalie*")
+  (goalie-mode))
+
+(defun goalie--render-ui (commit)
+  (let ((inhibit-read-only t))
+    (erase-buffer)
+    (insert "Open Commitments\n")
+    (mapc (lambda (each) (insert (concat each "\n"))) commit)
+    (insert "\n")
+    (insert "Today's Commitments (Date goes here)\n")
+    (insert (hilight-line "-- Add Commitment --"))))
+
+(defun goalie--handle-execute ()
+  (let ((new-commit (funcall goalie--prompt-for-new-commitment-fun)))
+    (setq goalie--existing-commitments (append goalie--existing-commitments
+                                               (list new-commit)))
+    (funcall goalie--render-fun goalie--existing-commitments)))
+
+(defun goalie--prompt-for-new-commitment ()
+  (read-string "What is your commitment? ")
+  )
+
+(defun hilight-line (line)
+  (propertize line 'face '((:foreground "red"))))
+
+(defvar goalie--existing-commitments '())
+(defvar goalie--prompt-for-new-commitment-fun #'ignore)
+(defvar goalie--render-fun #'ignore)
+
+(defun goalie-start (init-fun
+                     render-fun
+                     prompt-fun)
+  (setq goalie--prompt-for-new-commitment-fun prompt-fun)
+  (setq goalie--render-fun render-fun)
+  (setq goalie--existing-commitments '())
+  (funcall init-fun)
+  (funcall render-fun nil))
+
+;; could have rerender whole thing based on updates
+;; first is given a buffer var draw in
+(defun goalie ()
+  "Start goalie."
+  (interactive)
+  (goalie-start
+   #'goalie--initialize-ui
+   #'goalie--render-ui
+   #'goalie--prompt-for-new-commitment)
+
+  ;; start up goalie "object"
+  ;; creates/opens buffer
+
+  ;; reads in goalie data file
+
+  ;; calls render method on parts
+  )
+
+;;; goalie.el ends here
