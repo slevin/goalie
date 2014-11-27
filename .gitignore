@@ -4,3 +4,4 @@
 # Packaging
 .cask
 /notes_goalie.org
+/.ecukes-failing-scenarios
