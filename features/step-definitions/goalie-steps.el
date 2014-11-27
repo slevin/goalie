@@ -3,9 +3,11 @@
 ;; loaded automatically by Ecukes.
 
 
-(Then "^I should be in \"\\([^\"]+\\)\" mode$"
+(require 'cl-lib)
+
+(Then "^\"\\(.+\\)\" should be active$"
       (lambda (mode)
-        (equal 'mode major-mode)))
+        (cl-assert (string= mode major-mode))))
 
 ;; (Given "^I have \"\\(.+\\)\"$"
 ;;   (lambda (something)

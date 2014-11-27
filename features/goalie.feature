@@ -2,6 +2,8 @@ Feature: Adding new commitments
   Here are some commitments
 
   Scenario: Add one commitment
-    When I press "M-x"
-    And I type "goalie"
-    Then I should be in "Goalie" mode
+    Given I start an action chain
+    And I press "M-x"
+    When I type "goalie"
+    And I execute the action chain
+    Then "goalie-mode" should be active
