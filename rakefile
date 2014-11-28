@@ -1,5 +1,9 @@
+task :itest do
+  sh 'cask exec ecukes'
+end
+
 task :test do
-	sh 'cask exec ert-runner'
+  sh 'cask exec ert-runner'
 end
 
 task :test_init do
