@@ -19,4 +19,11 @@ Feature: Adding Commitments
     And I execute the action chain
     Then "commit1" should be a commitment
 
+  Scenario: I add multiple commitments
+    Given I start Goalie
+    When I add commitment "new-commit1"
+    And I add commitment "new-commit2"
+    Then "new-commit1" should be a commitment
+    And "new-commit2" should be a commitment
+
 

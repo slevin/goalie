@@ -21,6 +21,13 @@
       (lambda (new-commitment)
         (Then (format "I should see %S" new-commitment))))
 
+(When "I add commitment \"\\([^\"]+\\)\""
+      (lambda (new-commitment)
+        (When "I start an action chain")
+        (When "I press \"RET\"")
+        (When (format "I type %S" new-commitment))
+        (When "I execute the action chain")))
+
 ;; (Given "^I have \"\\(.+\\)\"$"
 ;;   (lambda (something)
 ;;     ;; ...
