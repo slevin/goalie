@@ -38,8 +38,7 @@
   (message "goto next"))
 
 (defun goalie-goto-previous ()
-  (interactive)
-  (message "goto previous"))
+  (interactive))
 
 (defun goalie-execute ()
   (interactive)

@@ -26,4 +26,16 @@ Feature: Adding Commitments
     Then "new-commit1" should be a commitment
     And "new-commit2" should be a commitment
 
+Feature: Moving
+  Scenario: Add starts highlighted
+    Given I start Goalie
+    Then "Add Commitment" should be highlighted
+
+  Scenario: Move previous highlights previous
+    Given I start Goalie
+    And I add commitment "commit1"
+    When I press "p"
+    Then "commit1" should be highlighted
+
+
 

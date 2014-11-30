@@ -28,27 +28,11 @@
         (When (format "I type %S" new-commitment))
         (When "I execute the action chain")))
 
-;; (Given "^I have \"\\(.+\\)\"$"
-;;   (lambda (something)
-;;     ;; ...
-;;     ))
-
-;; (When "^I have \"\\(.+\\)\"$"
-;;   (lambda (something)
-;;     ;; ...
-;;     ))
-
-;; (Then "^I should have \"\\(.+\\)\"$"
-;;   (lambda (something)
-;;     ;; ...
-;;     ))
-
-;; (And "^I have \"\\(.+\\)\"$"
-;;   (lambda (something)
-;;     ;; ...
-;;     ))
-
-;; (But "^I should not have \"\\(.+\\)\"$"
-;;   (lambda (something)
-;;     ;; ...
-;;     ))
+(Then "\"\\([^\"]+\\)\" should be highlighted"
+      (lambda (text)
+        (re-search-backward text)
+        (let* ((props (get-char-property (point) 'face)))
+          (cl-assert
+           (member (list :foreground "red") props)
+           nil
+           "Expected current point to be highlighted"))))
