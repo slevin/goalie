@@ -36,3 +36,12 @@
            (member (list :foreground "red") props)
            nil
            "Expected current point to be highlighted"))))
+
+(Then "\"\\([^\"]+\\)\" should not be highlighted"
+      (lambda (text)
+        (re-search-backward text)
+        (let* ((props (get-char-property (point) 'face)))
+          (cl-assert
+           (not (member (list :foreground "red") props))
+           nil
+           "Expected current point to be highlighted"))))

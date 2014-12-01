@@ -18,6 +18,7 @@ Feature: Adding Commitments
     And I type "commit1"
     And I execute the action chain
     Then "commit1" should be a commitment
+    And "commit1" should not be highlighted
 
   Scenario: I add multiple commitments
     Given I start Goalie
@@ -36,6 +37,7 @@ Feature: Moving
     And I add commitment "commit1"
     When I press "p"
     Then "commit1" should be highlighted
+    And "Add Commitment" should not be highlighted
 
 
 
