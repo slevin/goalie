@@ -18,6 +18,7 @@
 ;;; Code:
 
 (provide 'goalie)
+(require 'dash)
 
 (defvar goalie-mode-map
   (let ((map (make-keymap)))
@@ -38,7 +39,8 @@
   (message "goto next"))
 
 (defun goalie-goto-previous ()
-  (interactive))
+  (interactive)
+  (goalie--move-previous))
 
 (defun goalie-execute ()
   (interactive)
@@ -74,6 +76,18 @@
 (defun goalie--prompt-for-new-commitment ()
   (read-string "What is your commitment? ")
   )
+
+(defun goalie--move-previous ()
+  (setq goalie--existing-commitments
+        (-map-indexed
+         (lambda (idx item)
+           ;; mark last item as highlighted
+           (list (if (= (1+ idx) (length goalie--existing-commitments))
+                     t
+                   nil)
+                 (cadr item)))
+         goalie--existing-commitments))
+  (funcall goalie--render-fun goalie--existing-commitments))
 
 (defun goalie--hilight-line (line)
   (propertize line 'face '((:foreground "red"))))

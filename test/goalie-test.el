@@ -43,3 +43,14 @@
     (goalie--handle-execute)
     (should (equal commitment (list (list nil "work hard")
                                     (list nil  "play hard"))))))
+
+(ert-deftest add-move-previous ()
+  "adding one and move previous should highlight have that one highlighted"
+  (let* ((commitment nil)
+         (new-commit "commit1")
+         (rfun (lambda (coms) (setq commitment coms)))
+         (pfun (lambda () new-commit)))
+    (goalie-start #'ignore rfun pfun)
+    (goalie--handle-execute)
+    (goalie--move-previous)
+    (should (equal commitment (list (list t new-commit))))))
