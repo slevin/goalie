@@ -39,9 +39,10 @@
 
 (Then "\"\\([^\"]+\\)\" should not be highlighted"
       (lambda (text)
+        (goto-char (point-max))
         (re-search-backward text)
         (let* ((props (get-char-property (point) 'face)))
           (cl-assert
            (not (member (list :foreground "red") props))
            nil
-           "Expected current point to be highlighted"))))
+           "Expected current point to not be highlighted"))))

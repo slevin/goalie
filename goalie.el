@@ -57,21 +57,21 @@
                 text)))
     (insert (concat line "\n"))))
 
-(defun goalie--render-ui (commit)
+(defun goalie--render-ui (commit hl)
   (let ((inhibit-read-only t))
     (erase-buffer)
     (insert "Open Commitments\n")
     (mapc (lambda (each) (goalie--insert-line (car each) (cadr each))) commit)
     (insert "\n")
     (insert "Today's Commitments (Date goes here)\n")
-    (goalie--insert-line t "-- Add Commitment --")
+    (goalie--insert-line hl "-- Add Commitment --")
     ))
 
 (defun goalie--handle-execute ()
   (let ((new-commit (funcall goalie--prompt-for-new-commitment-fun)))
     (setq goalie--existing-commitments (append goalie--existing-commitments
                                                (list (list nil new-commit))))
-    (funcall goalie--render-fun goalie--existing-commitments)))
+    (goalie--call-render)))
 
 (defun goalie--prompt-for-new-commitment ()
   (read-string "What is your commitment? ")
@@ -87,7 +87,13 @@
                    nil)
                  (cadr item)))
          goalie--existing-commitments))
-  (funcall goalie--render-fun goalie--existing-commitments))
+  (goalie--call-render))
+
+(defun goalie--call-render ()
+  (let ((hilight-add (-none?
+                      (lambda (item) (car item))
+                      goalie--existing-commitments)))
+    (funcall goalie--render-fun goalie--existing-commitments hilight-add)))
 
 (defun goalie--hilight-line (line)
   (propertize line 'face '((:foreground "red"))))
@@ -103,7 +109,7 @@
   (setq goalie--render-fun render-fun)
   (setq goalie--existing-commitments '())
   (funcall init-fun)
-  (funcall render-fun nil))
+  (goalie--call-render))
 
 ;; could have rerender whole thing based on updates
 ;; first is given a buffer var draw in
@@ -113,14 +119,6 @@
   (goalie-start
    #'goalie--initialize-ui
    #'goalie--render-ui
-   #'goalie--prompt-for-new-commitment)
-
-  ;; start up goalie "object"
-  ;; creates/opens buffer
-
-  ;; reads in goalie data file
-
-  ;; calls render method on parts
-  )
+   #'goalie--prompt-for-new-commitment))
 
 ;;; goalie.el ends here
