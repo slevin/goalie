@@ -27,7 +27,7 @@
          (pfun (lambda () new-commit)))
     (goalie-start #'ignore rfun pfun)
     (goalie--handle-execute)
-    (should (equal commitment (list new-commit)))))
+    (should (equal commitment (list (list nil new-commit))))))
 
 (ert-deftest add-multiple-renders-multiple ()
   "adding multiple times should return multiple"
@@ -41,4 +41,5 @@
     (goalie-start #'ignore rfun pfun)
     (goalie--handle-execute)
     (goalie--handle-execute)
-    (should (equal commitment (list "work hard" "play hard")))))
+    (should (equal commitment (list (list nil "work hard")
+                                    (list nil  "play hard"))))))

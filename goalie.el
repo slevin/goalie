@@ -49,26 +49,33 @@
   (switch-to-buffer "*goalie*")
   (goalie-mode))
 
+(defun goalie--insert-line (hilight text)
+  (let ((line (if hilight
+                  (goalie--hilight-line text)
+                text)))
+    (insert (concat line "\n"))))
+
 (defun goalie--render-ui (commit)
   (let ((inhibit-read-only t))
     (erase-buffer)
     (insert "Open Commitments\n")
-    (mapc (lambda (each) (insert (concat each "\n"))) commit)
+    (mapc (lambda (each) (goalie--insert-line (car each) (cadr each))) commit)
     (insert "\n")
     (insert "Today's Commitments (Date goes here)\n")
-    (insert (hilight-line "-- Add Commitment --"))))
+    (goalie--insert-line t "-- Add Commitment --")
+    ))
 
 (defun goalie--handle-execute ()
   (let ((new-commit (funcall goalie--prompt-for-new-commitment-fun)))
     (setq goalie--existing-commitments (append goalie--existing-commitments
-                                               (list new-commit)))
+                                               (list (list nil new-commit))))
     (funcall goalie--render-fun goalie--existing-commitments)))
 
 (defun goalie--prompt-for-new-commitment ()
   (read-string "What is your commitment? ")
   )
 
-(defun hilight-line (line)
+(defun goalie--hilight-line (line)
   (propertize line 'face '((:foreground "red"))))
 
 (defvar goalie--existing-commitments '())
