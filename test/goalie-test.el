@@ -1,64 +1,48 @@
-(ert-deftest start-initializes ()
-  "Start goalie calls initialize and render functions"
-  (let* ((icalled nil)
-         (rcalled nil)
-         (ifun (lambda () (setq icalled t)))
-         (rfun (lambda (coms hl) (setq rcalled t))))
-    (goalie-start ifun rfun #'ignore)
-    (should (equal icalled t))
-    (should (equal rcalled t))))
+(defmacro with-my-fixture (&rest body)
+  `(let* ((initialized nil)
+          (render-commitments nil)
+          (render-hilight nil)
+          (new-commitments (list "commit1" "commit2"))
+          (ifun (lambda () (setq initialized t)))
+          (rfun (lambda (coms hl)
+                  (setq render-commitments coms)
+                  (setq render-hilight hl)))
+          (pfun (lambda ()
+                  (let ((return-commit (car new-commitments)))
+                    (setq new-commitments (cdr new-commitments))
+                    return-commit))))
+     (goalie-start ifun rfun pfun)
+     ,@body))
 
-(ert-deftest execute-on-add-prompts ()
-  "Execute when current line is add prompts for new commitment"
-  (let* ((prompt-called nil)
-         (pfun (lambda ()
-                 (progn
-                   (setq prompt-called t)
-                   "new prompt"))))
-    (goalie-start #'ignore #'ignore pfun)
-    (goalie--handle-execute)
-    (should (equal prompt-called t))))
+(ert-deftest start-initializes ()
+    "Start goalie calls initialize and render functions"
+    (with-my-fixture
+     (should (equal initialized t))
+     (should (equal render-commitments '()))))
 
 (ert-deftest add-renders-new ()
   "After adding commitment it should show up in today list"
-  (let* ((commitment nil)
-         (highlight nil)
-         (new-commit "work hard!")
-         (rfun (lambda (coms hl)
-                 (setq commitment coms)
-                 (setq highlight hl)))
-         (pfun (lambda () new-commit)))
-    (goalie-start #'ignore rfun pfun)
-    (goalie--handle-execute)
-    (should (equal commitment (list (list nil new-commit))))
-    (should (equal highlight t))))
+  (with-my-fixture
+   (goalie--handle-execute)
+   (should (equal render-commitments
+                  (list (list nil "commit1"))))
+   (should (equal render-hilight t))))
+
 
 (ert-deftest add-multiple-renders-multiple ()
   "adding multiple times should return multiple"
-  (let* ((commitments nil)
-         (new-commits (list "work hard" "play hard"))
-         (rfun (lambda (coms hl) (setq commitment coms)))
-         (pfun (lambda ()
-                 (let ((return-commit (car new-commits)))
-                   (setq new-commits (cdr new-commits))
-                   return-commit))))
-    (goalie-start #'ignore rfun pfun)
-    (goalie--handle-execute)
-    (goalie--handle-execute)
-    (should (equal commitment (list (list nil "work hard")
-                                    (list nil  "play hard"))))))
+  (with-my-fixture
+   (goalie--handle-execute)
+   (goalie--handle-execute)
+   (should (equal render-commitments
+                  (list (list nil "commit1")
+                        (list nil  "commit2"))))))
 
 (ert-deftest add-move-previous ()
   "adding one and move previous should highlight have that one highlighted"
-  (let* ((commitment nil)
-         (highlight nil)
-         (new-commit "commit1")
-         (rfun (lambda (coms hl)
-                 (setq commitment coms)
-                 (setq highlight hl)))
-         (pfun (lambda () new-commit)))
-    (goalie-start #'ignore rfun pfun)
-    (goalie--handle-execute)
-    (goalie--move-previous)
-    (should (equal commitment (list (list t new-commit))))
-    (should (equal highlight nil))))
+  (with-my-fixture
+   (goalie--handle-execute)
+   (goalie--move-previous)
+   (should (equal render-commitments
+                  (list (list t "commit1"))))
+   (should (equal render-hilight nil))))
