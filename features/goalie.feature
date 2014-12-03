@@ -18,7 +18,7 @@ Feature: Adding Commitments
     And I type "commit1"
     And I execute the action chain
     Then "commit1" should be a commitment
-    And "commit1" should not be highlighted
+    And "commit1" should not be hilighted
 
   Scenario: I add multiple commitments
     Given I start Goalie
@@ -30,14 +30,14 @@ Feature: Adding Commitments
 Feature: Moving
   Scenario: Add starts highlighted
     Given I start Goalie
-    Then "Add Commitment" should be highlighted
+    Then "Add Commitment" should be hilighted
 
   Scenario: Move previous highlights previous
     Given I start Goalie
     And I add commitment "commit1"
     When I press "p"
-    Then "commit1" should be highlighted
-    And "Add Commitment" should not be highlighted
+    Then "commit1" should be hilighted
+    And "Add Commitment" should not be hilighted
 
 
 

@@ -28,21 +28,20 @@
         (When (format "I type %S" new-commitment))
         (When "I execute the action chain")))
 
-(Then "\"\\([^\"]+\\)\" should be highlighted"
-      (lambda (text)
-        (re-search-backward text)
-        (let* ((props (get-char-property (point) 'face)))
-          (cl-assert
-           (member (list :foreground "red") props)
-           nil
-           "Expected current point to be highlighted"))))
+(defmacro with-hilight-check (check)
+  `(lambda (text)
+     (goto-char (point-max))
+     (re-search-backward text)
+     (let* ((props (get-char-property (point) 'face))
+            (hilighted (member (list :foreground "red") props)))
+       ,check)))
 
-(Then "\"\\([^\"]+\\)\" should not be highlighted"
-      (lambda (text)
-        (goto-char (point-max))
-        (re-search-backward text)
-        (let* ((props (get-char-property (point) 'face)))
-          (cl-assert
-           (not (member (list :foreground "red") props))
-           nil
-           "Expected current point to not be highlighted"))))
+(Then "\"\\([^\"]+\\)\" should be hilighted"
+      (with-hilight-check
+       (cl-assert hilighted nil
+                  "Expected current point to be hilighted")))
+
+(Then "\"\\([^\"]+\\)\" should not be hilighted"
+      (with-hilight-check
+       (cl-assert (not hilighted) nil
+                  "Expected current point to not be hilighted")))
