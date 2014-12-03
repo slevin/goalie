@@ -46,3 +46,14 @@
    (should (equal render-commitments
                   (list (list t "commit1"))))
    (should (equal render-hilight nil))))
+
+(ert-deftest add-move-previous-2x ()
+  "moving previous twice hilights top one"
+  (with-my-fixture
+   (goalie--handle-execute)
+   (goalie--handle-execute)
+   (goalie--move-previous)
+   (goalie--move-previous)
+   (should (equal render-commitments
+                  (list (list t "commit1")
+                        (list nil "commit2"))))))
