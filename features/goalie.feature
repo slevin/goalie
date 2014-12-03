@@ -1,22 +1,13 @@
 Feature: Entering Goalie
-  Scenario: I enter goalie mode 1
-    Given I start an action chain
-    And I press "M-x"
-    When I type "goalie"
-    And I execute the action chain
-    Then "goalie-mode" should be active
-
-  Scenario: I enter goalie mode 2
+  Scenario: I enter goalie mode
     Given I start Goalie
     Then "goalie-mode" should be active
+    And "Add Commitment" should be hilighted
 
 Feature: Adding Commitments
   Scenario: I add a commitment
     Given I start Goalie
-    When I start an action chain
-    And I press "RET"
-    And I type "commit1"
-    And I execute the action chain
+    When I add commitment "commit1"
     Then "commit1" should be a commitment
     And "commit1" should not be hilighted
 
@@ -28,10 +19,6 @@ Feature: Adding Commitments
     And "new-commit2" should be a commitment
 
 Feature: Moving
-  Scenario: Add starts highlighted
-    Given I start Goalie
-    Then "Add Commitment" should be hilighted
-
   Scenario: Move previous highlights previous
     Given I start Goalie
     And I add commitment "commit1"
