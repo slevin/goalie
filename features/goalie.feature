@@ -51,6 +51,14 @@ Feature: Moving
     And I press "n"
     Then "commit2" should be hilighted
 
+Feature: Saving
+  Scenario: Add commitment, quit, start
+    Given I start Goalie
+    And I add commitment "commit1"
+    When I quit Goalie
+    And I start Goalie
+    Then "commit1" should be a commitment
+
 
 
 

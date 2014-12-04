@@ -3,6 +3,7 @@
           (render-commitments nil)
           (render-hilight nil)
           (new-commitments (list "commit1" "commit2"))
+          (readfun (lambda () '()))
           (ifun (lambda () (setq initialized t)))
           (rfun (lambda (coms hl)
                   (setq render-commitments coms)
@@ -11,7 +12,7 @@
                   (let ((return-commit (car new-commitments)))
                     (setq new-commitments (cdr new-commitments))
                     return-commit))))
-     (goalie-start ifun rfun pfun)
+     (goalie-start readfun ifun rfun pfun)
      ,@body))
 
 (ert-deftest start-initializes ()

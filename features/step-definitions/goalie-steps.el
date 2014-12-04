@@ -45,3 +45,7 @@
       (with-hilight-check
        (cl-assert (not hilighted) nil
                   "Expected current point to not be hilighted")))
+
+(When "I quit Goalie"
+      (lambda ()
+        (kill-buffer)))

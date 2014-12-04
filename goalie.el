@@ -131,16 +131,20 @@
 (defun goalie--hilight-line (line)
   (propertize line 'face '((:foreground "red"))))
 
+(defun goalie--read-saved-content ()
+  '())
+
 (defvar goalie--existing-commitments '())
 (defvar goalie--prompt-for-new-commitment-fun #'ignore)
 (defvar goalie--render-fun #'ignore)
 
-(defun goalie-start (init-fun
+(defun goalie-start (read-saved-fun
+                     init-fun
                      render-fun
                      prompt-fun)
   (setq goalie--prompt-for-new-commitment-fun prompt-fun)
   (setq goalie--render-fun render-fun)
-  (setq goalie--existing-commitments '())
+  (setq goalie--existing-commitments (funcall read-saved-fun))
   (funcall init-fun)
   (goalie--call-render))
 
@@ -150,6 +154,7 @@
   "Start goalie."
   (interactive)
   (goalie-start
+   #'goalie--read-saved-content
    #'goalie--initialize-ui
    #'goalie--render-ui
    #'goalie--prompt-for-new-commitment))
