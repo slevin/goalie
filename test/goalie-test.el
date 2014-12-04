@@ -1,9 +1,11 @@
+(defvar saved-content-string "()")
+
 (defmacro with-my-fixture (&rest body)
   `(let* ((initialized nil)
           (render-commitments nil)
           (render-hilight nil)
           (new-commitments (list "commit1" "commit2"))
-          (readfun (lambda () '()))
+          (readfun (lambda () saved-content-string))
           (ifun (lambda () (setq initialized t)))
           (rfun (lambda (coms hl)
                   (setq render-commitments coms)
@@ -20,6 +22,14 @@
     (with-my-fixture
      (should (equal initialized t))
      (should (equal render-commitments '()))))
+
+(ert-deftest start-reads-in-saved-content ()
+  "read in content"
+  (setq saved-content-string "(\"commit one\" \"commit two\")")
+  (with-my-fixture
+   (should (equal render-commitments
+                  (list (list nil "commit one")
+                        (list nil "commit two"))))))
 
 (ert-deftest add-renders-new ()
   "After adding commitment it should show up in today list"
@@ -111,3 +121,11 @@
     (should (null (goalie--next-index 1 exist)))
     ;; should move next
     (should (equal 1 (goalie--next-index 0 exist)))))
+
+(ert-deftest parse ()
+  "goalie--parse-saved-content"
+  (should (equal (list (list nil 'commit1)
+                       (list nil 'commit2))
+                 (goalie--parse-saved-content "(commit1 commit2)")))
+  (should (null (goalie--parse-saved-content "")))
+  (should (null (goalie--parse-saved-content "parsable non list"))))

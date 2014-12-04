@@ -129,7 +129,17 @@
   (propertize line 'face '((:foreground "red"))))
 
 (defun goalie--read-saved-content ()
-  '())
+  "")
+
+
+;; handle buggy content
+
+(defun goalie--parse-saved-content (content-string)
+  (let ((parsed (condition-case nil
+                    (let ((parsed (car (read-from-string content-string))))
+                      (if (listp parsed) parsed '()))
+                  (error '()))))
+    (mapcar (lambda (item) (list nil item)) parsed)))
 
 (defvar goalie--existing-commitments '())
 (defvar goalie--prompt-for-new-commitment-fun #'ignore)
@@ -141,7 +151,8 @@
                      prompt-fun)
   (setq goalie--prompt-for-new-commitment-fun prompt-fun)
   (setq goalie--render-fun render-fun)
-  (setq goalie--existing-commitments (funcall read-saved-fun))
+  (setq goalie--existing-commitments (goalie--parse-saved-content
+                                      (funcall read-saved-fun)))
   (funcall init-fun)
   (goalie--call-render))
 
