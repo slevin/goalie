@@ -35,5 +35,22 @@ Feature: Moving
     Then "commit1" should be hilighted
     And "commit2" should not be hilighted
 
+  Scenario: Move previous/next
+    Given I start Goalie
+    And I add commitment "commit1"
+    When I press "p"
+    And I press "n"
+    Then "Add Commitment" should be hilighted
+
+  Scenario: Move previous/previous/next
+    Given I start Goalie
+    And I add commitment "commit1"
+    And I add commitment "commit2"
+    When I press "p"
+    And I press "p"
+    And I press "n"
+    Then "commit2" should be hilighted
+
+
 
 

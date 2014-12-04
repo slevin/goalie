@@ -36,7 +36,7 @@
 
 (defun goalie-goto-next ()
   (interactive)
-  (message "goto next"))
+  (goalie--move-next))
 
 (defun goalie-goto-previous ()
   (interactive)
@@ -77,15 +77,48 @@
   (read-string "What is your commitment? ")
   )
 
+
+(defun goalie--hilight-index (existing-commitments)
+  (-find-index
+   (lambda (item) (not (null (car item))))
+   existing-commitments))
+
+(defun goalie--update-hilight-index (newindex existing-commitments)
+  (-map-indexed
+   (lambda (idx item)
+     (list (cond ((null newindex) nil)
+                 ((= idx newindex) t)
+                 (t nil))
+           (cadr item)))
+   existing-commitments))
+
+(defun goalie--prev-index (currentindex existing-commitments)
+  (if (> (length existing-commitments) 0)
+      (cond ((null currentindex) (1- (length existing-commitments)))
+            ((equal currentindex 0) 0)
+            (t (1- currentindex)))
+    nil))
+
+(defun goalie--next-index (currentindex existing-commitments)
+  (cond ((null currentindex) nil)
+        ((= currentindex (1- (length existing-commitments))) nil)
+        (t (1+ currentindex))))
+
 (defun goalie--move-previous ()
   (setq goalie--existing-commitments
-        (-map-indexed
-         (lambda (idx item)
-           ;; mark last item as highlighted
-           (list (if (= (1+ idx) (length goalie--existing-commitments))
-                     t
-                   nil)
-                 (cadr item)))
+        (goalie--update-hilight-index
+         (goalie--prev-index (goalie--hilight-index
+                              goalie--existing-commitments)
+                             goalie--existing-commitments)
+         goalie--existing-commitments))
+  (goalie--call-render))
+
+(defun goalie--move-next ()
+  (setq goalie--existing-commitments
+        (goalie--update-hilight-index
+         (goalie--next-index (goalie--hilight-index
+                              goalie--existing-commitments)
+                             goalie--existing-commitments)
          goalie--existing-commitments))
   (goalie--call-render))
 

@@ -57,3 +57,56 @@
    (should (equal render-commitments
                   (list (list t "commit1")
                         (list nil "commit2"))))))
+
+
+;;; Simpler function tests
+
+(ert-deftest hilight-index ()
+  "goalie--hilight-index"
+  (should (null (goalie--hilight-index
+                 (list (list nil 'commit1)
+                       (list nil 'commit2)))))
+
+  (should (equal 0 (goalie--hilight-index
+                    (list (list t 'commit1)
+                          (list nil 'commit2)))))
+
+  (should (equal 1 (goalie--hilight-index
+                    (list (list nil 'commit1)
+                          (list t 'commit2))))))
+
+(ert-deftest update-hilight-index ()
+  "goalie--update-hilight-index"
+  (should (equal (list (list nil 'commit1)
+                       (list nil 'commit2))
+                 (goalie--update-hilight-index nil
+                                               (list (list nil 'commit1)
+                                                     (list nil 'commit2)))))
+
+  (should (equal (list (list t 'commit1)
+                       (list nil 'commit2))
+                 (goalie--update-hilight-index 0
+                                               (list (list nil 'commit1)
+                                                     (list t 'commit2))))))
+
+(ert-deftest prev-index ()
+  "goalie--prev-index"
+  (let ((exist (list (list nil 'commit1)
+                     (list nil 'commit2))))
+    ;; stops at 0
+    (should (equal 0 (goalie--prev-index 0 exist)))
+    ;; moves previous
+    (should (equal 0 (goalie--prev-index 1 exist)))
+    ;; last when at nil
+    (should (equal 1 (goalie--prev-index nil exist)))))
+
+(ert-deftest next-index ()
+  "goalie--next-index"
+  (let ((exist (list (list nil 'commit1)
+                     (list nil 'commit2))))
+    ;; stops at nil
+    (should (null (goalie--next-index nil exist)))
+    ;; go to nil if at end
+    (should (null (goalie--next-index 1 exist)))
+    ;; should move next
+    (should (equal 1 (goalie--next-index 0 exist)))))
