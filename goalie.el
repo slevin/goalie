@@ -105,20 +105,17 @@
         (t (1+ currentindex))))
 
 (defun goalie--move-previous ()
-  (setq goalie--existing-commitments
-        (goalie--update-hilight-index
-         (goalie--prev-index (goalie--hilight-index
-                              goalie--existing-commitments)
-                             goalie--existing-commitments)
-         goalie--existing-commitments))
-  (goalie--call-render))
+  (goalie--move #'goalie--prev-index))
 
 (defun goalie--move-next ()
+  (goalie--move #'goalie--next-index))
+
+(defun goalie--move (movefun)
   (setq goalie--existing-commitments
         (goalie--update-hilight-index
-         (goalie--next-index (goalie--hilight-index
-                              goalie--existing-commitments)
-                             goalie--existing-commitments)
+         (funcall movefun
+                  (goalie--hilight-index goalie--existing-commitments)
+                  goalie--existing-commitments)
          goalie--existing-commitments))
   (goalie--call-render))
 
