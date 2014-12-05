@@ -71,6 +71,7 @@
   (let ((new-commit (funcall goalie--prompt-for-new-commitment-fun)))
     (setq goalie--existing-commitments (append goalie--existing-commitments
                                                (list (list nil new-commit))))
+    (goalie--prepare-and-save-content goalie--existing-commitments)
     (goalie--call-render)))
 
 (defun goalie--prompt-for-new-commitment ()
@@ -131,8 +132,9 @@
 (defun goalie--read-saved-content ()
   "")
 
-
-;; handle buggy content
+(defun goalie--save-content (content-string)
+  ;; just write to file
+  )
 
 (defun goalie--parse-saved-content (content-string)
   (let ((parsed (condition-case nil
@@ -141,16 +143,27 @@
                   (error '()))))
     (mapcar (lambda (item) (list nil item)) parsed)))
 
+(defun goalie--prepare-content (content)
+  (prin1-to-string (mapcar (lambda (item) (cadr item)) content)))
+
+
+(defun goalie--prepare-and-save-content (content)
+  (let ((prepared (goalie--prepare-content content)))
+    (funcall goalie--save-fun prepared)))
+
 (defvar goalie--existing-commitments '())
 (defvar goalie--prompt-for-new-commitment-fun #'ignore)
 (defvar goalie--render-fun #'ignore)
+(defvar goalie--save-fun #'ignore)
 
 (defun goalie-start (read-saved-fun
                      init-fun
                      render-fun
-                     prompt-fun)
+                     prompt-fun
+                     save-fun)
   (setq goalie--prompt-for-new-commitment-fun prompt-fun)
   (setq goalie--render-fun render-fun)
+  (setq goalie--save-fun save-fun)
   (setq goalie--existing-commitments (goalie--parse-saved-content
                                       (funcall read-saved-fun)))
   (funcall init-fun)
@@ -165,6 +178,7 @@
    #'goalie--read-saved-content
    #'goalie--initialize-ui
    #'goalie--render-ui
-   #'goalie--prompt-for-new-commitment))
+   #'goalie--prompt-for-new-commitment
+   #'goalie--save-content))
 
 ;;; goalie.el ends here

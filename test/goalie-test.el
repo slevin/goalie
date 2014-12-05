@@ -5,6 +5,7 @@
           (render-commitments nil)
           (render-hilight nil)
           (new-commitments (list "commit1" "commit2"))
+          (saved-content nil)
           (readfun (lambda () saved-content-string))
           (ifun (lambda () (setq initialized t)))
           (rfun (lambda (coms hl)
@@ -13,8 +14,10 @@
           (pfun (lambda ()
                   (let ((return-commit (car new-commitments)))
                     (setq new-commitments (cdr new-commitments))
-                    return-commit))))
-     (goalie-start readfun ifun rfun pfun)
+                    return-commit)))
+          (savefun (lambda (content-string)
+                     (setq saved-content content-string))))
+     (goalie-start readfun ifun rfun pfun savefun)
      ,@body))
 
 (ert-deftest start-initializes ()
@@ -39,7 +42,6 @@
                   (list (list nil "commit1"))))
    (should (equal render-hilight t))))
 
-
 (ert-deftest add-multiple-renders-multiple ()
   "adding multiple times should return multiple"
   (with-my-fixture
@@ -48,6 +50,13 @@
    (should (equal render-commitments
                   (list (list nil "commit1")
                         (list nil  "commit2"))))))
+
+(ert-deftest add-commits-saves-state ()
+  "After adding content is saved through save function"
+  (with-my-fixture
+   (goalie--handle-execute)
+   (goalie--handle-execute)
+   (should (equal saved-content "(\"commit1\" \"commit2\")"))))
 
 (ert-deftest add-move-previous ()
   "adding one and move previous should highlight have that one highlighted"
@@ -129,3 +138,9 @@
                  (goalie--parse-saved-content "(commit1 commit2)")))
   (should (null (goalie--parse-saved-content "")))
   (should (null (goalie--parse-saved-content "parsable non list"))))
+
+(ert-deftest prepare ()
+  "goalie--prepare-saved-content"
+  (should (equal "(commit1 commit2)"
+                 (goalie--prepare-content (list (list nil 'commit1)
+                                                (list nil 'commit2))))))
