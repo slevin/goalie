@@ -131,7 +131,9 @@
 
 (defun goalie--read-saved-content ()
   (with-temp-buffer
-    (insert-file-contents goalie--save-file-path)
+    (condition-case nil
+        (insert-file-contents goalie--save-file-path)
+      (error '()))
     (buffer-string)))
 
 (defun goalie--save-content (content-string)

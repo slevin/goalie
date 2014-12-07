@@ -15,18 +15,26 @@
 (require 'espuds)
 (require 'ert)
 
+(defun savefile ()
+  (f-join goalie-features-path "temp-save.txt"))
+
+(defun clearsave ()
+  (condition-case nil
+      (f-delete (savefile))
+    (error '())))
+
 (Setup
  ;; Before anything has run
  )
 
 (Before
- ;; Before each scenario is run
- )
+ (clearsave)
+ (setq goalie--save-file-path (savefile)))
+
 
 (After
  ;; After each scenario is run
  )
 
 (Teardown
- ;; After when everything has been run
- )
+ (clearsave))
