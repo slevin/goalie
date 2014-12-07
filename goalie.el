@@ -130,11 +130,13 @@
   (propertize line 'face '((:foreground "red"))))
 
 (defun goalie--read-saved-content ()
-  "")
+  (with-temp-buffer
+    (insert-file-contents goalie--save-file-path)
+    (buffer-string)))
 
 (defun goalie--save-content (content-string)
-  ;; just write to file
-  )
+  (with-temp-file goalie--save-file-path
+    (insert content-string)))
 
 (defun goalie--parse-saved-content (content-string)
   (let ((parsed (condition-case nil
@@ -151,6 +153,7 @@
   (let ((prepared (goalie--prepare-content content)))
     (funcall goalie--save-fun prepared)))
 
+(defvar goalie--save-file-path "/Users/slevin/goalie-file.txt")
 (defvar goalie--existing-commitments '())
 (defvar goalie--prompt-for-new-commitment-fun #'ignore)
 (defvar goalie--render-fun #'ignore)
