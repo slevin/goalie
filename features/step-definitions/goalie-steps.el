@@ -21,6 +21,10 @@
       (lambda (new-commitment)
         (Then (format "I should see %S" new-commitment))))
 
+(Then "\"\\([^\"]+\\)\" should not be a commitment"
+      (lambda (new-commitment)
+        (Then (format "I should not see %S" new-commitment))))
+
 (When "I add commitment \"\\([^\"]+\\)\""
       (lambda (new-commitment)
         (When "I start an action chain")

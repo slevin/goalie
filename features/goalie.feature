@@ -59,6 +59,20 @@ Feature: Saving
     And I start Goalie
     Then "commit1" should be a commitment
 
+Feature: Deleting
+  Scenario: Add, delete, confirm
+    Given I start Goalie
+    And I add commitment "commit1"
+    And I press "p"
+    When I press "d"
+    And I start an action chain
+    And I type "yes"
+    And I execute the action chain
+    Then "commit1" should not be a commitment
+    And "Add Commitment" should be hilighted
+
+    
+
 
 
 

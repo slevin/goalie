@@ -1,4 +1,5 @@
 (defvar saved-content-string "()")
+(defvar delete-prompt-return '())
 
 (defmacro with-my-fixture (&rest body)
   `(let* ((initialized nil)
@@ -6,6 +7,7 @@
           (render-hilight nil)
           (new-commitments (list "commit1" "commit2"))
           (saved-content nil)
+          (delete-prompted nil)
           (readfun (lambda () saved-content-string))
           (ifun (lambda () (setq initialized t)))
           (rfun (lambda (coms hl)
@@ -16,8 +18,11 @@
                     (setq new-commitments (cdr new-commitments))
                     return-commit)))
           (savefun (lambda (content-string)
-                     (setq saved-content content-string))))
-     (goalie-start readfun ifun rfun pfun savefun)
+                     (setq saved-content content-string)))
+          (prompt-for-delete-fun (lambda ()
+                                   (setq delete-prompted t)
+                                   delete-prompt-return)))
+     (goalie-start readfun ifun rfun pfun savefun prompt-for-delete-fun)
      ,@body))
 
 (ert-deftest start-initializes ()
@@ -78,6 +83,12 @@
                   (list (list t "commit1")
                         (list nil "commit2"))))))
 
+
+(ert-deftest delete-nothing ()
+  "delete in initial nothing state should do nothing"
+  (with-my-fixture
+   (goalie--request-delete)
+   (should (null delete-prompted))))
 
 ;;; Simpler function tests
 
@@ -144,3 +155,7 @@
   (should (equal "(commit1 commit2)"
                  (goalie--prepare-content (list (list nil 'commit1)
                                                 (list nil 'commit2))))))
+
+(ert-deftest delete-nothing ()
+  (goalie--request-delete)
+  (should (null delete-prompted)))

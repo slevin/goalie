@@ -25,6 +25,7 @@
     (suppress-keymap map t)
     (define-key map (kbd "n") 'goalie-goto-next)
     (define-key map (kbd "p") 'goalie-goto-previous)
+    (define-key map (kbd "d") 'goalie-delete-commitment)
     (define-key map (kbd "RET") 'goalie-execute)
     map)
   "Goalie key map.")
@@ -45,6 +46,10 @@
 (defun goalie-execute ()
   (interactive)
   (goalie--handle-execute))
+
+(defun goalie-delete-commitment ()
+  (interactive)
+  (goalie--request-delete))
 
 
 (defun goalie--initialize-ui ()
@@ -78,6 +83,20 @@
   (read-string "What is your commitment? ")
   )
 
+
+(defun goalie--prompt-for-delete ()
+  (let ((yn (y-or-n-p "Do you really want to delete fool? ")))
+    (if yn (goalie--delete-current))))
+
+
+(defun goalie-get-confirmation ()
+  '())
+
+(defun goalie--request-delete ()
+  ;; internal function that can check if on a deletable thing
+  ;; and if so it will prompt, and if force flag could actually remove item at index
+
+  )
 
 (defun goalie--hilight-index (existing-commitments)
   (-find-index
@@ -160,15 +179,18 @@
 (defvar goalie--prompt-for-new-commitment-fun #'ignore)
 (defvar goalie--render-fun #'ignore)
 (defvar goalie--save-fun #'ignore)
+(defvar goalie--confirmation-fun #'ignore)
 
 (defun goalie-start (read-saved-fun
                      init-fun
                      render-fun
                      prompt-fun
-                     save-fun)
+                     save-fun
+                     confirm-fun)
   (setq goalie--prompt-for-new-commitment-fun prompt-fun)
   (setq goalie--render-fun render-fun)
   (setq goalie--save-fun save-fun)
+  (setq goalie--confirmation-fun confirm-fun)
   (setq goalie--existing-commitments (goalie--parse-saved-content
                                       (funcall read-saved-fun)))
   (funcall init-fun)
@@ -184,6 +206,7 @@
    #'goalie--initialize-ui
    #'goalie--render-ui
    #'goalie--prompt-for-new-commitment
-   #'goalie--save-content))
+   #'goalie--save-content
+   #'goalie--get-confirmation))
 
 ;;; goalie.el ends here
