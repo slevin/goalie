@@ -80,21 +80,22 @@
     (goalie--call-render)))
 
 (defun goalie--prompt-for-new-commitment ()
-  (read-string "What is your commitment? ")
-  )
+  (read-string "What is your commitment? "))
 
 
 (defun goalie--prompt-for-delete ()
-  (let ((yn (y-or-n-p "Do you really want to delete fool? ")))
-    (if yn (goalie--delete-current))))
+  (y-or-n-p "Do you really want to delete? "))
 
-
-(defun goalie-get-confirmation ()
-  '())
 
 (defun goalie--request-delete ()
-  (if (not (null (goalie--hilight-index goalie--existing-commitments)))
-      (funcall goalie--confirmation-fun)))
+  (let ((hilighted (goalie--hilight-index goalie--existing-commitments)))
+    (if (not (null hilighted))
+        (if (funcall goalie--confirmation-fun)
+            (progn
+              (setq goalie--existing-commitments
+                    (-remove-at hilighted goalie--existing-commitments))
+              (goalie--call-render))))))
+
 
 (defun goalie--hilight-index (existing-commitments)
   (-find-index
@@ -205,6 +206,6 @@
    #'goalie--render-ui
    #'goalie--prompt-for-new-commitment
    #'goalie--save-content
-   #'goalie--get-confirmation))
+   #'goalie--prompt-for-delete))
 
 ;;; goalie.el ends here

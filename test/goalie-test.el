@@ -93,12 +93,16 @@
 
 
 (ert-deftest delete-something ()
-  "if something is hilighted then it should prompt for it"
+  "if something is hilighted then it should prompt for it and delete it"
   (with-my-fixture
    (goalie--handle-execute)
+   (goalie--handle-execute)
    (goalie--move-previous)
+   (goalie--move-previous)
+   (setq delete-prompt-return t)
    (goalie--request-delete)
-   (should (equal t delete-prompted))))
+   (should (equal t delete-prompted))
+   (should (equal render-commitments (list (list nil "commit2"))))))
 
 ;;; Simpler function tests
 
