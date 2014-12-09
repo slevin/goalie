@@ -5,3 +5,4 @@
 .cask
 /notes_goalie.org
 /.ecukes-failing-scenarios
+/features/temp-save.txt
