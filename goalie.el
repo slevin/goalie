@@ -93,10 +93,8 @@
   '())
 
 (defun goalie--request-delete ()
-  ;; internal function that can check if on a deletable thing
-  ;; and if so it will prompt, and if force flag could actually remove item at index
-
-  )
+  (if (not (null (goalie--hilight-index goalie--existing-commitments)))
+      (funcall goalie--confirmation-fun)))
 
 (defun goalie--hilight-index (existing-commitments)
   (-find-index

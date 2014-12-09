@@ -88,7 +88,17 @@
   "delete in initial nothing state should do nothing"
   (with-my-fixture
    (goalie--request-delete)
-   (should (null delete-prompted))))
+   (should (null delete-prompted))
+   ))
+
+
+(ert-deftest delete-something ()
+  "if something is hilighted then it should prompt for it"
+  (with-my-fixture
+   (goalie--handle-execute)
+   (goalie--move-previous)
+   (goalie--request-delete)
+   (should (equal t delete-prompted))))
 
 ;;; Simpler function tests
 
@@ -155,7 +165,3 @@
   (should (equal "(commit1 commit2)"
                  (goalie--prepare-content (list (list nil 'commit1)
                                                 (list nil 'commit2))))))
-
-(ert-deftest delete-nothing ()
-  (goalie--request-delete)
-  (should (null delete-prompted)))
