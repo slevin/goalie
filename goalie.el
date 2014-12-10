@@ -61,12 +61,11 @@
 
 (defun goalie--get-hilight-fun (hilight)
   (if hilight
-      (funcall goalie--hilight-fun-private)
+      goalie--hilight-fun-private
     #'identity))
 
-(defun goalie--hilight-fun ()
-  (lambda (text)
-    (propertize text 'face '((:foreground "red")))))
+(defun goalie--hilight-fun (text)
+  (propertize text 'face '((:foreground "red"))))
 
 (defun goalie--insert-header-line (line)
   (let ((fline (propertize line 'face '((:foreground "medium sea green")))))
