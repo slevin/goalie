@@ -56,14 +56,17 @@
   (switch-to-buffer "*goalie*")
   (goalie-mode))
 
-(defun goalie--insert-line (hilight text)
-  (let ((line (if hilight
-                  (goalie--hilight-line text)
-                text)))
-    (insert (concat line "\n"))))
+(defun goalie--insert-line (hilight-fun text)
+  (insert (concat (funcall hilight-fun text) "\n")))
 
-(defun goalie--hilight-line (line)
-  (propertize line 'face '((:foreground "red"))))
+(defun goalie--get-hilight-fun (hilight)
+  (if hilight
+      (funcall goalie--hilight-fun-private)
+    #'identity))
+
+(defun goalie--hilight-fun ()
+  (lambda (text)
+    (propertize text 'face '((:foreground "red")))))
 
 (defun goalie--insert-header-line (line)
   (let ((fline (propertize line 'face '((:foreground "medium sea green")))))
@@ -73,11 +76,13 @@
   (let ((inhibit-read-only t))
     (erase-buffer)
     (goalie--insert-header-line "Open Commitments")
-    (mapc (lambda (each) (goalie--insert-line (car each) (cadr each))) commit)
+    (mapc (lambda (each) (goalie--insert-line
+                          (car each)
+                          (cadr each)))
+          commit)
     (insert "\n")
     (goalie--insert-header-line "Today's Commitments (Date goes here)")
-    (goalie--insert-line hl "-- Add Commitment --")
-    ))
+    (goalie--insert-line hl "-- Add Commitment --")))
 
 (defun goalie--handle-execute ()
   (let ((new-commit (funcall goalie--prompt-for-new-commitment-fun)))
@@ -146,10 +151,16 @@
   (goalie--call-render))
 
 (defun goalie--call-render ()
-  (let ((hilight-add (-none?
-                      (lambda (item) (car item))
-                      goalie--existing-commitments)))
-    (funcall goalie--render-fun goalie--existing-commitments hilight-add)))
+  (let ((hilight-add (goalie--get-hilight-fun
+                      (-none?
+                       (lambda (item) (car item))
+                       goalie--existing-commitments)))
+        (render-commitments (mapcar (lambda (each)
+                                      (list (goalie--get-hilight-fun
+                                             (car each))
+                                            (cadr each)))
+                                    goalie--existing-commitments)))
+    (funcall goalie--render-fun render-commitments hilight-add)))
 
 (defun goalie--read-saved-content ()
   (with-temp-buffer
@@ -183,17 +194,20 @@
 (defvar goalie--render-fun #'ignore)
 (defvar goalie--save-fun #'ignore)
 (defvar goalie--confirmation-fun #'ignore)
+(defvar goalie--hilight-fun-private #'identity)
 
 (defun goalie-start (read-saved-fun
                      init-fun
                      render-fun
                      prompt-fun
                      save-fun
-                     confirm-fun)
+                     confirm-fun
+                     hilight-fun)
   (setq goalie--prompt-for-new-commitment-fun prompt-fun)
   (setq goalie--render-fun render-fun)
   (setq goalie--save-fun save-fun)
   (setq goalie--confirmation-fun confirm-fun)
+  (setq goalie--hilight-fun-private hilight-fun)
   (setq goalie--existing-commitments (goalie--parse-saved-content
                                       (funcall read-saved-fun)))
   (funcall init-fun)
@@ -210,6 +224,7 @@
    #'goalie--render-ui
    #'goalie--prompt-for-new-commitment
    #'goalie--save-content
-   #'goalie--prompt-for-delete))
+   #'goalie--prompt-for-delete
+   #'goalie--hilight-fun))
 
 ;;; goalie.el ends here
