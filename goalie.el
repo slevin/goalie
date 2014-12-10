@@ -62,13 +62,20 @@
                 text)))
     (insert (concat line "\n"))))
 
+(defun goalie--hilight-line (line)
+  (propertize line 'face '((:foreground "red"))))
+
+(defun goalie--insert-header-line (line)
+  (let ((fline (propertize line 'face '((:foreground "medium sea green")))))
+    (insert (concat fline "\n"))))
+
 (defun goalie--render-ui (commit hl)
   (let ((inhibit-read-only t))
     (erase-buffer)
-    (insert "Open Commitments\n")
+    (goalie--insert-header-line "Open Commitments")
     (mapc (lambda (each) (goalie--insert-line (car each) (cadr each))) commit)
     (insert "\n")
-    (insert "Today's Commitments (Date goes here)\n")
+    (goalie--insert-header-line "Today's Commitments (Date goes here)")
     (goalie--insert-line hl "-- Add Commitment --")
     ))
 
@@ -143,9 +150,6 @@
                       (lambda (item) (car item))
                       goalie--existing-commitments)))
     (funcall goalie--render-fun goalie--existing-commitments hilight-add)))
-
-(defun goalie--hilight-line (line)
-  (propertize line 'face '((:foreground "red"))))
 
 (defun goalie--read-saved-content ()
   (with-temp-buffer
