@@ -16,9 +16,14 @@
 ;; none
 
 ;;; Code:
+;;; -*- lexical-binding: t -*-
 
 (provide 'goalie)
 (require 'dash)
+
+;; ---------------------------------------------------------
+;; User Interface Code (The Edges)
+;; ---------------------------------------------------------
 
 (defvar goalie-mode-map
   (let ((map (make-keymap)))
@@ -51,18 +56,12 @@
   (interactive)
   (goalie--request-delete))
 
-
 (defun goalie--initialize-ui ()
   (switch-to-buffer "*goalie*")
   (goalie-mode))
 
 (defun goalie--insert-line (hilight-fun text)
   (insert (concat (funcall hilight-fun text) "\n")))
-
-(defun goalie--get-hilight-fun (hilight)
-  (if hilight
-      goalie--hilight-fun-private
-    #'identity))
 
 (defun goalie--hilight-fun (text)
   (propertize text 'face '((:foreground "red"))))
@@ -83,20 +82,38 @@
     (goalie--insert-header-line "Today's Commitments (Date goes here)")
     (goalie--insert-line hl "-- Add Commitment --")))
 
+(defun goalie--prompt-for-new-commitment ()
+  (read-string "What is your commitment? "))
+
+(defun goalie--prompt-for-delete ()
+  (y-or-n-p "Do you really want to delete? "))
+
+(defun goalie--read-saved-content ()
+  (with-temp-buffer
+    (condition-case nil
+        (insert-file-contents goalie--save-file-path)
+      (error '()))
+    (buffer-string)))
+
+(defun goalie--save-content (content-string)
+  (with-temp-file goalie--save-file-path
+    (insert content-string)))
+
+;; ---------------------------------------------------------
+;; Logic Code (The Core)
+;; ---------------------------------------------------------
+
+(defun goalie--get-hilight-fun (hilight)
+  (if hilight
+      goalie--hilight-fun-private
+    #'identity))
+
 (defun goalie--handle-execute ()
   (let ((new-commit (funcall goalie--prompt-for-new-commitment-fun)))
     (setq goalie--existing-commitments (append goalie--existing-commitments
                                                (list (list nil new-commit))))
     (goalie--prepare-and-save-content goalie--existing-commitments)
     (goalie--call-render)))
-
-(defun goalie--prompt-for-new-commitment ()
-  (read-string "What is your commitment? "))
-
-
-(defun goalie--prompt-for-delete ()
-  (y-or-n-p "Do you really want to delete? "))
-
 
 (defun goalie--request-delete ()
   (let ((hilighted (goalie--hilight-index goalie--existing-commitments)))
@@ -160,17 +177,6 @@
                                             (cadr each)))
                                     goalie--existing-commitments)))
     (funcall goalie--render-fun render-commitments hilight-add)))
-
-(defun goalie--read-saved-content ()
-  (with-temp-buffer
-    (condition-case nil
-        (insert-file-contents goalie--save-file-path)
-      (error '()))
-    (buffer-string)))
-
-(defun goalie--save-content (content-string)
-  (with-temp-file goalie--save-file-path
-    (insert content-string)))
 
 (defun goalie--parse-saved-content (content-string)
   (let ((parsed (condition-case nil
