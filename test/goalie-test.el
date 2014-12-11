@@ -1,3 +1,5 @@
+;;; -*- lexical-binding: t -*-
+
 (defvar saved-content-string "()")
 (defvar delete-prompt-return '())
 
@@ -21,8 +23,9 @@
                      (setq saved-content content-string)))
           (prompt-for-delete-fun (lambda ()
                                    (setq delete-prompted t)
-                                   delete-prompt-return)))
-     (goalie-start readfun ifun rfun pfun savefun prompt-for-delete-fun)
+                                   delete-prompt-return))
+          (hilight-fun2 #'identity))
+     (goalie-start readfun ifun rfun pfun savefun prompt-for-delete-fun hilight-fun2)
      ,@body))
 
 (ert-deftest start-initializes ()
@@ -36,8 +39,8 @@
   (setq saved-content-string "(\"commit one\" \"commit two\")")
   (with-my-fixture
    (should (equal render-commitments
-                  (list (list nil "commit one")
-                        (list nil "commit two"))))))
+                  (list (list #'identity "commit one")
+                        (list #'identity "commit two"))))))
 
 (ert-deftest add-renders-new ()
   "After adding commitment it should show up in today list"
