@@ -2,6 +2,7 @@
 
 (defvar saved-content-string "()")
 (defvar delete-prompt-return '())
+(defun testhi (text) text)
 
 (defmacro with-my-fixture (&rest body)
   `(let* ((initialized nil)
@@ -24,7 +25,7 @@
           (prompt-for-delete-fun (lambda ()
                                    (setq delete-prompted t)
                                    delete-prompt-return))
-          (hilight-fun2 #'identity))
+          (hilight-fun2 #'testhi))
      (goalie-start readfun ifun rfun pfun savefun prompt-for-delete-fun hilight-fun2)
      ,@body))
 
@@ -47,8 +48,8 @@
   (with-my-fixture
    (goalie--handle-execute)
    (should (equal render-commitments
-                  (list (list nil "commit1"))))
-   (should (equal render-hilight t))))
+                  (list (list #'identity "commit1"))))
+   (should (equal render-hilight #'testhi))))
 
 (ert-deftest add-multiple-renders-multiple ()
   "adding multiple times should return multiple"
@@ -56,8 +57,8 @@
    (goalie--handle-execute)
    (goalie--handle-execute)
    (should (equal render-commitments
-                  (list (list nil "commit1")
-                        (list nil  "commit2"))))))
+                  (list (list #'identity "commit1")
+                        (list #'identity  "commit2"))))))
 
 (ert-deftest add-commits-saves-state ()
   "After adding content is saved through save function"
@@ -72,8 +73,8 @@
    (goalie--handle-execute)
    (goalie--move-previous)
    (should (equal render-commitments
-                  (list (list t "commit1"))))
-   (should (equal render-hilight nil))))
+                  (list (list #'testhi "commit1"))))
+   (should (equal render-hilight #'identity))))
 
 (ert-deftest add-move-previous-2x ()
   "moving previous twice hilights top one"
@@ -83,8 +84,8 @@
    (goalie--move-previous)
    (goalie--move-previous)
    (should (equal render-commitments
-                  (list (list t "commit1")
-                        (list nil "commit2"))))))
+                  (list (list #'testhi "commit1")
+                        (list #'identity "commit2"))))))
 
 
 (ert-deftest delete-nothing ()
@@ -105,7 +106,7 @@
    (setq delete-prompt-return t)
    (goalie--request-delete)
    (should (equal t delete-prompted))
-   (should (equal render-commitments (list (list nil "commit2"))))))
+   (should (equal render-commitments (list (list #'identity "commit2"))))))
 
 ;;; Simpler function tests
 
