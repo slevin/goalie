@@ -20,6 +20,7 @@
 
 (provide 'goalie)
 (require 'dash)
+(require 'eieio)
 
 ;; ---------------------------------------------------------
 ;; User Interface Code (The Edges)
@@ -88,16 +89,16 @@
 (defun goalie--prompt-for-delete ()
   (y-or-n-p "Do you really want to delete? "))
 
-(defun goalie--read-saved-content ()
-  (with-temp-buffer
-    (condition-case nil
-        (insert-file-contents goalie--save-file-path)
-      (error '()))
-    (buffer-string)))
+;; (defun goalie--read-saved-content ()
+;;   (with-temp-buffer
+;;     (condition-case nil
+;;         (insert-file-contents goalie--save-file-path)
+;;       (error '()))
+;;     (buffer-string)))
 
-(defun goalie--save-content (content-string)
-  (with-temp-file goalie--save-file-path
-    (insert content-string)))
+;; (defun goalie--save-content (content-string)
+;;   (with-temp-file goalie--save-file-path
+;;     (insert content-string)))
 
 ;; ---------------------------------------------------------
 ;; Logic Code (The Core)
@@ -191,15 +192,15 @@
 
 (defun goalie--prepare-and-save-content (content)
   (let ((prepared (goalie--prepare-content content)))
-    (funcall goalie--save-fun prepared)))
+    (goalie--save-content goalie--interface prepared)))
 
 (defvar goalie--save-file-path "/Users/slevin/goalie-file.txt")
 (defvar goalie--existing-commitments '())
 (defvar goalie--prompt-for-new-commitment-fun #'ignore)
 (defvar goalie--render-fun #'ignore)
-(defvar goalie--save-fun #'ignore)
 (defvar goalie--confirmation-fun #'ignore)
 (defvar goalie--hilight-fun-private #'identity)
+(defvar goalie--interface '())
 
 ;; read-saved-fun, save-fun
 (defun goalie-start (interface
@@ -208,13 +209,13 @@
                      prompt-fun
                      confirm-fun
                      hilight-fun)
+  (setq goalie--interface interface)
   (setq goalie--prompt-for-new-commitment-fun prompt-fun)
   (setq goalie--render-fun render-fun)
-  (setq goalie--save-fun save-fun)
   (setq goalie--confirmation-fun confirm-fun)
   (setq goalie--hilight-fun-private hilight-fun)
   (setq goalie--existing-commitments (goalie--parse-saved-content
-                                      (funcall read-saved-fun)))
+                                      (goalie--read-saved-content interface)))
   (funcall init-fun)
   (goalie--call-render))
 
@@ -224,11 +225,10 @@
   "Start goalie."
   (interactive)
   (goalie-start
-   #'goalie--read-saved-content
+   (make-instance 'goalie--external-emacs)
    #'goalie--initialize-ui
    #'goalie--render-ui
    #'goalie--prompt-for-new-commitment
-   #'goalie--save-content
    #'goalie--prompt-for-delete
    #'goalie--hilight-fun))
 
