@@ -2,16 +2,25 @@
 
 (defvar saved-content-string "()")
 (defvar delete-prompt-return '())
+(defvar *goalie-saved-content* nil)
+
 (defun testhi (text) text)
+
+(defclass goalie--external-test () ()
+  "test interface")
+
+(defmethod goalie--read-saved-content ((obj goalie--external-test))
+  saved-content-string)
+
+(defmethod goalie--save-content ((obj goalie--external-test) content-string)
+  (setq *goalie-saved-content* content-string))
 
 (defmacro with-my-fixture (&rest body)
   `(let* ((initialized nil)
           (render-commitments nil)
           (render-hilight nil)
           (new-commitments (list "commit1" "commit2"))
-          (saved-content nil)
           (delete-prompted nil)
-          (readfun (lambda () saved-content-string))
           (ifun (lambda () (setq initialized t)))
           (rfun (lambda (coms hl)
                   (setq render-commitments coms)
@@ -20,13 +29,13 @@
                   (let ((return-commit (car new-commitments)))
                     (setq new-commitments (cdr new-commitments))
                     return-commit)))
-          (savefun (lambda (content-string)
-                     (setq saved-content content-string)))
           (prompt-for-delete-fun (lambda ()
                                    (setq delete-prompted t)
                                    delete-prompt-return))
           (hilight-fun2 #'testhi))
-     (goalie-start readfun ifun rfun pfun savefun prompt-for-delete-fun hilight-fun2)
+     (goalie-start
+      (make-instance 'goalie--external-test)
+      ifun rfun pfun prompt-for-delete-fun hilight-fun2)
      ,@body))
 
 (ert-deftest start-initializes ()
@@ -65,7 +74,7 @@
   (with-my-fixture
    (goalie--handle-execute)
    (goalie--handle-execute)
-   (should (equal saved-content "(\"commit1\" \"commit2\")"))))
+   (should (equal *goalie-saved-content* "(\"commit1\" \"commit2\")"))))
 
 (ert-deftest add-move-previous ()
   "adding one and move previous should highlight have that one highlighted"
