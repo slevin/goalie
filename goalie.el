@@ -201,11 +201,11 @@
 (defvar goalie--confirmation-fun #'ignore)
 (defvar goalie--hilight-fun-private #'identity)
 
-(defun goalie-start (read-saved-fun
+;; read-saved-fun, save-fun
+(defun goalie-start (interface
                      init-fun
                      render-fun
                      prompt-fun
-                     save-fun
                      confirm-fun
                      hilight-fun)
   (setq goalie--prompt-for-new-commitment-fun prompt-fun)
@@ -231,5 +231,23 @@
    #'goalie--save-content
    #'goalie--prompt-for-delete
    #'goalie--hilight-fun))
+
+;; eieio stuff
+
+(defclass goalie--external-emacs () ()
+  "external ui adaptor interface")
+
+(defgeneric goalie--read-saved-content ())
+(defmethod goalie--read-saved-content ((obj goalie--external-emacs))
+  (with-temp-buffer
+    (condition-case nil
+        (insert-file-contents goalie--save-file-path)
+      (error '()))
+    (buffer-string)))
+
+(defgeneric goalie--save-content (content-string))
+(defmethod goalie--save-content ((obj goalie--external-emacs) content-string)
+  (with-temp-file goalie--save-file-path
+    (insert content-string)))
 
 ;;; goalie.el ends here
