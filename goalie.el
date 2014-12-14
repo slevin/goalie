@@ -61,6 +61,8 @@
 (defclass goalie--external-emacs () ()
   "external ui adaptor interface")
 
+(defvar goalie--save-file-path "/Users/slevin/goalie-file.txt")
+
 (defmethod goalie--initialize-ui ((obj goalie--external-emacs))
   (switch-to-buffer "*goalie*")
   (goalie-mode))
@@ -211,13 +213,9 @@
   (let ((prepared (goalie--prepare-content content)))
     (goalie--save-content goalie--interface prepared)))
 
-(defvar goalie--save-file-path "/Users/slevin/goalie-file.txt")
 (defvar goalie--existing-commitments '())
 (defvar goalie--interface '())
 
-;; goalie--hilight-fun ->
-;; hilight-fun ->
-;; goalie--hilight-fun-private
 (defun goalie-start (interface)
   (setq goalie--interface interface)
   (setq goalie--existing-commitments (goalie--parse-saved-content
