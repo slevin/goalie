@@ -128,21 +128,36 @@
 (defun goalie--non-hilight (interface text)
   text)
 
+(defun goalie--update-state (new-state)
+  (setq goalie--existing-commitments new-state)
+  (goalie--prepare-and-save-content goalie--existing-commitments)
+  (goalie--call-render))
+
+(defun goalie--call-render ()
+  (let ((hilight-add (goalie--get-hilight-fun
+                      (-none?
+                       (lambda (item) (car item))
+                       goalie--existing-commitments)))
+        (render-commitments (mapcar (lambda (each)
+                                      (list (goalie--get-hilight-fun
+                                             (car each))
+                                            (cadr each)))
+                                    goalie--existing-commitments)))
+    (goalie--render-ui goalie--interface render-commitments hilight-add)))
+
+
 (defun goalie--handle-execute ()
-  (let ((new-commit (goalie--prompt-for-new-commitment goalie--interface)))
-    (setq goalie--existing-commitments (append goalie--existing-commitments
-                                               (list (list nil new-commit))))
-    (goalie--prepare-and-save-content goalie--existing-commitments)
-    (goalie--call-render)))
+  (let* ((new-commit (goalie--prompt-for-new-commitment goalie--interface))
+         (new-state (append goalie--existing-commitments
+                            (list (list nil new-commit)))))
+    (goalie--update-state new-state)))
 
 (defun goalie--request-delete ()
   (let ((hilighted (goalie--hilight-index goalie--existing-commitments)))
     (if (not (null hilighted))
         (if (goalie--prompt-for-delete goalie--interface)
-            (progn
-              (setq goalie--existing-commitments
-                    (-remove-at hilighted goalie--existing-commitments))
-              (goalie--call-render))))))
+            (let ((new-state (-remove-at hilighted goalie--existing-commitments)))
+              (goalie--update-state new-state))))))
 
 
 (defun goalie--hilight-index (existing-commitments)
@@ -178,25 +193,12 @@
   (goalie--move #'goalie--next-index))
 
 (defun goalie--move (movefun)
-  (setq goalie--existing-commitments
-        (goalie--update-hilight-index
-         (funcall movefun
-                  (goalie--hilight-index goalie--existing-commitments)
-                  goalie--existing-commitments)
-         goalie--existing-commitments))
-  (goalie--call-render))
-
-(defun goalie--call-render ()
-  (let ((hilight-add (goalie--get-hilight-fun
-                      (-none?
-                       (lambda (item) (car item))
-                       goalie--existing-commitments)))
-        (render-commitments (mapcar (lambda (each)
-                                      (list (goalie--get-hilight-fun
-                                             (car each))
-                                            (cadr each)))
-                                    goalie--existing-commitments)))
-    (goalie--render-ui goalie--interface render-commitments hilight-add)))
+  (let ((new-state (goalie--update-hilight-index
+                    (funcall movefun
+                             (goalie--hilight-index goalie--existing-commitments)
+                             goalie--existing-commitments)
+                    goalie--existing-commitments)))
+    (goalie--update-state new-state)))
 
 (defun goalie--parse-saved-content (content-string)
   (let ((parsed (condition-case nil
