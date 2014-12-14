@@ -36,13 +36,14 @@
   (setq *delete-prompted* t)
   delete-prompt-return)
 
-;; render-commitments render-hilight
+(defmethod goalie--hilight-fun ((obj goalie--external-test) text)
+  text)
+
 (defmacro with-my-fixture (&rest body)
-  `(let* ((hilight-fun2 #'testhi))
+  `(progn
      (setq *new-commitments* (list "commit1" "commit2"))
      (goalie-start
-      (make-instance 'goalie--external-test)
-      hilight-fun2)
+      (make-instance 'goalie--external-test))
      ,@body))
 
 (ert-deftest start-initializes ()
@@ -56,16 +57,16 @@
   (setq saved-content-string "(\"commit one\" \"commit two\")")
   (with-my-fixture
    (should (equal *goalie-render-commitments*
-                  (list (list #'identity "commit one")
-                        (list #'identity "commit two"))))))
+                  (list (list #'goalie--non-hilight "commit one")
+                        (list #'goalie--non-hilight "commit two"))))))
 
 (ert-deftest add-renders-new ()
   "After adding commitment it should show up in today list"
   (with-my-fixture
    (goalie--handle-execute)
    (should (equal *goalie-render-commitments*
-                  (list (list #'identity "commit1"))))
-   (should (equal *goalie-render-hilight* #'testhi))))
+                  (list (list #'goalie--non-hilight "commit1"))))
+   (should (equal *goalie-render-hilight* #'goalie--hilight-fun))))
 
 (ert-deftest add-multiple-renders-multiple ()
   "adding multiple times should return multiple"
@@ -73,8 +74,8 @@
    (goalie--handle-execute)
    (goalie--handle-execute)
    (should (equal *goalie-render-commitments*
-                  (list (list #'identity "commit1")
-                        (list #'identity  "commit2"))))))
+                  (list (list #'goalie--non-hilight "commit1")
+                        (list #'goalie--non-hilight  "commit2"))))))
 
 (ert-deftest add-commits-saves-state ()
   "After adding content is saved through save function"
@@ -89,8 +90,8 @@
    (goalie--handle-execute)
    (goalie--move-previous)
    (should (equal *goalie-render-commitments*
-                  (list (list #'testhi "commit1"))))
-   (should (equal *goalie-render-hilight* #'identity))))
+                  (list (list #'goalie--hilight-fun "commit1"))))
+   (should (equal *goalie-render-hilight* #'goalie--non-hilight))))
 
 (ert-deftest add-move-previous-2x ()
   "moving previous twice hilights top one"
@@ -100,8 +101,8 @@
    (goalie--move-previous)
    (goalie--move-previous)
    (should (equal *goalie-render-commitments*
-                  (list (list #'testhi "commit1")
-                        (list #'identity "commit2"))))))
+                  (list (list #'goalie--hilight-fun "commit1")
+                        (list #'goalie--non-hilight "commit2"))))))
 
 
 (ert-deftest delete-nothing ()
@@ -122,7 +123,7 @@
    (setq delete-prompt-return t)
    (goalie--request-delete)
    (should (equal t *delete-prompted*))
-   (should (equal *goalie-render-commitments* (list (list #'identity "commit2"))))))
+   (should (equal *goalie-render-commitments* (list (list #'goalie--non-hilight "commit2"))))))
 
 ;;; Simpler function tests
 
