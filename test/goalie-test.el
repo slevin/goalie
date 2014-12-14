@@ -3,6 +3,9 @@
 (defvar saved-content-string "()")
 (defvar delete-prompt-return '())
 (defvar *goalie-saved-content* nil)
+(defvar *goalie-initialized* nil)
+(defvar *goalie-render-commitments* nil)
+(defvar *goalie-render-hilight* nil)
 
 (defun testhi (text) text)
 
@@ -15,16 +18,17 @@
 (defmethod goalie--save-content ((obj goalie--external-test) content-string)
   (setq *goalie-saved-content* content-string))
 
+(defmethod goalie--initialize-ui ((obj goalie--external-test))
+  (setq *goalie-initialized* t))
+
+(defmethod goalie--render-ui ((obj goalie--external-test) coms hl)
+  (setq *goalie-render-commitments* coms)
+  (setq *goalie-render-hilight* hl))
+
+;; render-commitments render-hilight
 (defmacro with-my-fixture (&rest body)
-  `(let* ((initialized nil)
-          (render-commitments nil)
-          (render-hilight nil)
-          (new-commitments (list "commit1" "commit2"))
+  `(let* ((new-commitments (list "commit1" "commit2"))
           (delete-prompted nil)
-          (ifun (lambda () (setq initialized t)))
-          (rfun (lambda (coms hl)
-                  (setq render-commitments coms)
-                  (setq render-hilight hl)))
           (pfun (lambda ()
                   (let ((return-commit (car new-commitments)))
                     (setq new-commitments (cdr new-commitments))
@@ -35,20 +39,20 @@
           (hilight-fun2 #'testhi))
      (goalie-start
       (make-instance 'goalie--external-test)
-      ifun rfun pfun prompt-for-delete-fun hilight-fun2)
+      pfun prompt-for-delete-fun hilight-fun2)
      ,@body))
 
 (ert-deftest start-initializes ()
     "Start goalie calls initialize and render functions"
     (with-my-fixture
-     (should (equal initialized t))
-     (should (equal render-commitments '()))))
+     (should (equal *goalie-initialized* t))
+     (should (equal *goalie-render-commitments* '()))))
 
 (ert-deftest start-reads-in-saved-content ()
   "read in content"
   (setq saved-content-string "(\"commit one\" \"commit two\")")
   (with-my-fixture
-   (should (equal render-commitments
+   (should (equal *goalie-render-commitments*
                   (list (list #'identity "commit one")
                         (list #'identity "commit two"))))))
 
@@ -56,16 +60,16 @@
   "After adding commitment it should show up in today list"
   (with-my-fixture
    (goalie--handle-execute)
-   (should (equal render-commitments
+   (should (equal *goalie-render-commitments*
                   (list (list #'identity "commit1"))))
-   (should (equal render-hilight #'testhi))))
+   (should (equal *goalie-render-hilight* #'testhi))))
 
 (ert-deftest add-multiple-renders-multiple ()
   "adding multiple times should return multiple"
   (with-my-fixture
    (goalie--handle-execute)
    (goalie--handle-execute)
-   (should (equal render-commitments
+   (should (equal *goalie-render-commitments*
                   (list (list #'identity "commit1")
                         (list #'identity  "commit2"))))))
 
@@ -81,9 +85,9 @@
   (with-my-fixture
    (goalie--handle-execute)
    (goalie--move-previous)
-   (should (equal render-commitments
+   (should (equal *goalie-render-commitments*
                   (list (list #'testhi "commit1"))))
-   (should (equal render-hilight #'identity))))
+   (should (equal *goalie-render-hilight* #'identity))))
 
 (ert-deftest add-move-previous-2x ()
   "moving previous twice hilights top one"
@@ -92,7 +96,7 @@
    (goalie--handle-execute)
    (goalie--move-previous)
    (goalie--move-previous)
-   (should (equal render-commitments
+   (should (equal *goalie-render-commitments*
                   (list (list #'testhi "commit1")
                         (list #'identity "commit2"))))))
 
@@ -115,7 +119,7 @@
    (setq delete-prompt-return t)
    (goalie--request-delete)
    (should (equal t delete-prompted))
-   (should (equal render-commitments (list (list #'identity "commit2"))))))
+   (should (equal *goalie-render-commitments* (list (list #'identity "commit2"))))))
 
 ;;; Simpler function tests
 

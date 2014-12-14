@@ -57,7 +57,11 @@
   (interactive)
   (goalie--request-delete))
 
-(defun goalie--initialize-ui ()
+
+(defclass goalie--external-emacs () ()
+  "external ui adaptor interface")
+
+(defmethod goalie--initialize-ui ((obj goalie--external-emacs))
   (switch-to-buffer "*goalie*")
   (goalie-mode))
 
@@ -71,7 +75,7 @@
   (let ((fline (propertize line 'face '((:foreground "medium sea green")))))
     (insert (concat fline "\n"))))
 
-(defun goalie--render-ui (commit hl)
+(defmethod goalie--render-ui ((obj goalie--external-emacs) commit hl)
   (let ((inhibit-read-only t))
     (erase-buffer)
     (goalie--insert-header-line "Open Commitments")
@@ -89,20 +93,26 @@
 (defun goalie--prompt-for-delete ()
   (y-or-n-p "Do you really want to delete? "))
 
-;; (defun goalie--read-saved-content ()
-;;   (with-temp-buffer
-;;     (condition-case nil
-;;         (insert-file-contents goalie--save-file-path)
-;;       (error '()))
-;;     (buffer-string)))
+(defmethod goalie--read-saved-content ((obj goalie--external-emacs))
+  (with-temp-buffer
+    (condition-case nil
+        (insert-file-contents goalie--save-file-path)
+      (error '()))
+    (buffer-string)))
 
-;; (defun goalie--save-content (content-string)
-;;   (with-temp-file goalie--save-file-path
-;;     (insert content-string)))
+(defmethod goalie--save-content ((obj goalie--external-emacs) content-string)
+  (with-temp-file goalie--save-file-path
+    (insert content-string)))
 
 ;; ---------------------------------------------------------
 ;; Logic Code (The Core)
 ;; ---------------------------------------------------------
+
+
+(defgeneric goalie--read-saved-content ())
+(defgeneric goalie--save-content (content-string))
+(defgeneric goalie--initialize-ui ())
+(defgeneric goalie--render-ui (commit hl))
 
 (defun goalie--get-hilight-fun (hilight)
   (if hilight
@@ -177,7 +187,7 @@
                                              (car each))
                                             (cadr each)))
                                     goalie--existing-commitments)))
-    (funcall goalie--render-fun render-commitments hilight-add)))
+    (goalie--render-ui goalie--interface render-commitments hilight-add)))
 
 (defun goalie--parse-saved-content (content-string)
   (let ((parsed (condition-case nil
@@ -197,26 +207,21 @@
 (defvar goalie--save-file-path "/Users/slevin/goalie-file.txt")
 (defvar goalie--existing-commitments '())
 (defvar goalie--prompt-for-new-commitment-fun #'ignore)
-(defvar goalie--render-fun #'ignore)
 (defvar goalie--confirmation-fun #'ignore)
 (defvar goalie--hilight-fun-private #'identity)
 (defvar goalie--interface '())
 
-;; read-saved-fun, save-fun
 (defun goalie-start (interface
-                     init-fun
-                     render-fun
                      prompt-fun
                      confirm-fun
                      hilight-fun)
   (setq goalie--interface interface)
   (setq goalie--prompt-for-new-commitment-fun prompt-fun)
-  (setq goalie--render-fun render-fun)
   (setq goalie--confirmation-fun confirm-fun)
   (setq goalie--hilight-fun-private hilight-fun)
   (setq goalie--existing-commitments (goalie--parse-saved-content
                                       (goalie--read-saved-content interface)))
-  (funcall init-fun)
+  (goalie--initialize-ui interface)
   (goalie--call-render))
 
 ;; could have rerender whole thing based on updates
@@ -226,28 +231,8 @@
   (interactive)
   (goalie-start
    (make-instance 'goalie--external-emacs)
-   #'goalie--initialize-ui
-   #'goalie--render-ui
    #'goalie--prompt-for-new-commitment
    #'goalie--prompt-for-delete
    #'goalie--hilight-fun))
-
-;; eieio stuff
-
-(defclass goalie--external-emacs () ()
-  "external ui adaptor interface")
-
-(defgeneric goalie--read-saved-content ())
-(defmethod goalie--read-saved-content ((obj goalie--external-emacs))
-  (with-temp-buffer
-    (condition-case nil
-        (insert-file-contents goalie--save-file-path)
-      (error '()))
-    (buffer-string)))
-
-(defgeneric goalie--save-content (content-string))
-(defmethod goalie--save-content ((obj goalie--external-emacs) content-string)
-  (with-temp-file goalie--save-file-path
-    (insert content-string)))
 
 ;;; goalie.el ends here
