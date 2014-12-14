@@ -87,10 +87,10 @@
     (goalie--insert-header-line "Today's Commitments (Date goes here)")
     (goalie--insert-line hl "-- Add Commitment --")))
 
-(defun goalie--prompt-for-new-commitment ()
+(defmethod goalie--prompt-for-new-commitment ((obj goalie--external-emacs))
   (read-string "What is your commitment? "))
 
-(defun goalie--prompt-for-delete ()
+(defmethod goalie--prompt-for-delete ((obj goalie--external-emacs))
   (y-or-n-p "Do you really want to delete? "))
 
 (defmethod goalie--read-saved-content ((obj goalie--external-emacs))
@@ -113,6 +113,8 @@
 (defgeneric goalie--save-content (content-string))
 (defgeneric goalie--initialize-ui ())
 (defgeneric goalie--render-ui (commit hl))
+(defgeneric goalie--prompt-for-new-commitment ())
+(defgeneric goalie--prompt-for-delete ())
 
 (defun goalie--get-hilight-fun (hilight)
   (if hilight
@@ -120,7 +122,7 @@
     #'identity))
 
 (defun goalie--handle-execute ()
-  (let ((new-commit (funcall goalie--prompt-for-new-commitment-fun)))
+  (let ((new-commit (goalie--prompt-for-new-commitment goalie--interface)))
     (setq goalie--existing-commitments (append goalie--existing-commitments
                                                (list (list nil new-commit))))
     (goalie--prepare-and-save-content goalie--existing-commitments)
@@ -129,7 +131,7 @@
 (defun goalie--request-delete ()
   (let ((hilighted (goalie--hilight-index goalie--existing-commitments)))
     (if (not (null hilighted))
-        (if (funcall goalie--confirmation-fun)
+        (if (goalie--prompt-for-delete goalie--interface)
             (progn
               (setq goalie--existing-commitments
                     (-remove-at hilighted goalie--existing-commitments))
@@ -206,33 +208,23 @@
 
 (defvar goalie--save-file-path "/Users/slevin/goalie-file.txt")
 (defvar goalie--existing-commitments '())
-(defvar goalie--prompt-for-new-commitment-fun #'ignore)
-(defvar goalie--confirmation-fun #'ignore)
 (defvar goalie--hilight-fun-private #'identity)
 (defvar goalie--interface '())
 
 (defun goalie-start (interface
-                     prompt-fun
-                     confirm-fun
                      hilight-fun)
   (setq goalie--interface interface)
-  (setq goalie--prompt-for-new-commitment-fun prompt-fun)
-  (setq goalie--confirmation-fun confirm-fun)
   (setq goalie--hilight-fun-private hilight-fun)
   (setq goalie--existing-commitments (goalie--parse-saved-content
                                       (goalie--read-saved-content interface)))
   (goalie--initialize-ui interface)
   (goalie--call-render))
 
-;; could have rerender whole thing based on updates
-;; first is given a buffer var draw in
 (defun goalie ()
   "Start goalie."
   (interactive)
   (goalie-start
    (make-instance 'goalie--external-emacs)
-   #'goalie--prompt-for-new-commitment
-   #'goalie--prompt-for-delete
    #'goalie--hilight-fun))
 
 ;;; goalie.el ends here

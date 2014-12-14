@@ -6,6 +6,8 @@
 (defvar *goalie-initialized* nil)
 (defvar *goalie-render-commitments* nil)
 (defvar *goalie-render-hilight* nil)
+(defvar *new-commitments* nil)
+(defvar *delete-prompted* nil)
 
 (defun testhi (text) text)
 
@@ -25,21 +27,22 @@
   (setq *goalie-render-commitments* coms)
   (setq *goalie-render-hilight* hl))
 
+(defmethod goalie--prompt-for-new-commitment ((obj goalie--external-test))
+  (let ((return-commit (car *new-commitments*)))
+    (setq *new-commitments* (cdr *new-commitments*))
+    return-commit))
+
+(defmethod goalie--prompt-for-delete ((obj goalie--external-test))
+  (setq *delete-prompted* t)
+  delete-prompt-return)
+
 ;; render-commitments render-hilight
 (defmacro with-my-fixture (&rest body)
-  `(let* ((new-commitments (list "commit1" "commit2"))
-          (delete-prompted nil)
-          (pfun (lambda ()
-                  (let ((return-commit (car new-commitments)))
-                    (setq new-commitments (cdr new-commitments))
-                    return-commit)))
-          (prompt-for-delete-fun (lambda ()
-                                   (setq delete-prompted t)
-                                   delete-prompt-return))
-          (hilight-fun2 #'testhi))
+  `(let* ((hilight-fun2 #'testhi))
+     (setq *new-commitments* (list "commit1" "commit2"))
      (goalie-start
       (make-instance 'goalie--external-test)
-      pfun prompt-for-delete-fun hilight-fun2)
+      hilight-fun2)
      ,@body))
 
 (ert-deftest start-initializes ()
@@ -105,7 +108,7 @@
   "delete in initial nothing state should do nothing"
   (with-my-fixture
    (goalie--request-delete)
-   (should (null delete-prompted))
+   (should (null *delete-prompted*))
    ))
 
 
@@ -118,7 +121,7 @@
    (goalie--move-previous)
    (setq delete-prompt-return t)
    (goalie--request-delete)
-   (should (equal t delete-prompted))
+   (should (equal t *delete-prompted*))
    (should (equal *goalie-render-commitments* (list (list #'identity "commit2"))))))
 
 ;;; Simpler function tests
