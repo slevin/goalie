@@ -71,6 +71,18 @@ Feature: Deleting
     Then "commit1" should not be a commitment
     And "Add Commitment" should be hilighted
 
+  Scenario: Add, delete, restart
+    Given I start Goalie
+    And I add commitment "commit1"
+    And I press "p"
+    When I start an action chain
+    And I press "d"
+    And I press "y"
+    And I execute the action chain
+    And I quit Goalie
+    and I start Goalie
+    Then "commit1" should not be a commitment
+
     
 
 
