@@ -23,7 +23,7 @@
 (require 'eieio)
 
 ;; ---------------------------------------------------------
-;; User Interface Code (The Edges)
+;; Interface Code (The Crust)
 ;; ---------------------------------------------------------
 
 (defvar goalie-mode-map
@@ -108,9 +108,8 @@
     (insert content-string)))
 
 ;; ---------------------------------------------------------
-;; Logic Code (The Core)
+;; Interaction Code (The Sauce)
 ;; ---------------------------------------------------------
-
 
 (defgeneric goalie--read-saved-content ())
 (defgeneric goalie--save-content (content-string))
@@ -120,13 +119,6 @@
 (defgeneric goalie--prompt-for-delete ())
 (defgeneric goalie--hilight-fun (text))
 
-(defun goalie--get-hilight-fun (hilight)
-  (if hilight
-      #'goalie--hilight-fun
-    #'goalie--non-hilight))
-
-(defun goalie--non-hilight (interface text)
-  text)
 
 (defun goalie--update-state (new-state)
   (setq goalie--existing-commitments new-state)
@@ -148,8 +140,8 @@
 
 (defun goalie--handle-execute ()
   (let* ((new-commit (goalie--prompt-for-new-commitment goalie--interface))
-         (new-state (append goalie--existing-commitments
-                            (list (list nil new-commit)))))
+         (new-state (goalie--add-commitment goalie--existing-commitments
+                                            new-commit)))
     (goalie--update-state new-state)))
 
 (defun goalie--request-delete ()
@@ -159,6 +151,57 @@
             (let ((new-state (-remove-at hilighted goalie--existing-commitments)))
               (goalie--update-state new-state))))))
 
+(defun goalie--move-previous ()
+  (goalie--move #'goalie--prev-index))
+
+(defun goalie--move-next ()
+  (goalie--move #'goalie--next-index))
+
+(defun goalie--move (movefun)
+  (let ((new-state (goalie--move-hilight
+                    goalie--existing-commitments
+                    movefun)))
+    (goalie--update-state new-state)))
+
+(defvar goalie--existing-commitments '())
+(defvar goalie--interface '())
+
+(defun goalie-start (interface)
+  (setq goalie--interface interface)
+  (setq goalie--existing-commitments (goalie--parse-saved-content
+                                      (goalie--read-saved-content interface)))
+  (goalie--initialize-ui interface)
+  (goalie--call-render))
+
+(defun goalie ()
+  "Start goalie."
+  (interactive)
+  (goalie-start
+   (make-instance 'goalie--external-emacs)))
+
+
+;; ---------------------------------------------------------
+;; Logic Code (The Cheese)
+;; ---------------------------------------------------------
+
+
+(defun goalie--get-hilight-fun (hilight)
+  (if hilight
+      #'goalie--hilight-fun
+    #'goalie--non-hilight))
+
+(defun goalie--non-hilight (interface text)
+  text)
+
+(defun goalie--add-commitment (existing new)
+  (append existing (list (list nil new-commit))))
+
+(defun goalie--move-hilight (existing movefun)
+  (goalie--update-hilight-index
+   (funcall movefun
+            (goalie--hilight-index existing)
+            existing)
+   existing))
 
 (defun goalie--hilight-index (existing-commitments)
   (-find-index
@@ -186,20 +229,6 @@
         ((= currentindex (1- (length existing-commitments))) nil)
         (t (1+ currentindex))))
 
-(defun goalie--move-previous ()
-  (goalie--move #'goalie--prev-index))
-
-(defun goalie--move-next ()
-  (goalie--move #'goalie--next-index))
-
-(defun goalie--move (movefun)
-  (let ((new-state (goalie--update-hilight-index
-                    (funcall movefun
-                             (goalie--hilight-index goalie--existing-commitments)
-                             goalie--existing-commitments)
-                    goalie--existing-commitments)))
-    (goalie--update-state new-state)))
-
 (defun goalie--parse-saved-content (content-string)
   (let ((parsed (condition-case nil
                     (let ((parsed (car (read-from-string content-string))))
@@ -214,21 +243,5 @@
 (defun goalie--prepare-and-save-content (content)
   (let ((prepared (goalie--prepare-content content)))
     (goalie--save-content goalie--interface prepared)))
-
-(defvar goalie--existing-commitments '())
-(defvar goalie--interface '())
-
-(defun goalie-start (interface)
-  (setq goalie--interface interface)
-  (setq goalie--existing-commitments (goalie--parse-saved-content
-                                      (goalie--read-saved-content interface)))
-  (goalie--initialize-ui interface)
-  (goalie--call-render))
-
-(defun goalie ()
-  "Start goalie."
-  (interactive)
-  (goalie-start
-   (make-instance 'goalie--external-emacs)))
 
 ;;; goalie.el ends here
