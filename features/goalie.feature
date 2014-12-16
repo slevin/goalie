@@ -22,7 +22,7 @@ Feature: Moving
   Scenario: Move previous highlights previous
     Given I start Goalie
     And I add commitment "commit1"
-    When I press "p"
+    When I move previous
     Then "commit1" should be hilighted
     And "Add Commitment" should not be hilighted
 
@@ -30,25 +30,25 @@ Feature: Moving
     Given I start Goalie
     And I add commitment "commit1"
     And I add commitment "commit2"
-    When I press "p"
-    And I press "p"
+    When I move previous
+    And I move previous
     Then "commit1" should be hilighted
     And "commit2" should not be hilighted
 
   Scenario: Move previous/next
     Given I start Goalie
     And I add commitment "commit1"
-    When I press "p"
-    And I press "n"
+    When I move previous
+    And I move next
     Then "Add Commitment" should be hilighted
 
   Scenario: Move previous/previous/next
     Given I start Goalie
     And I add commitment "commit1"
     And I add commitment "commit2"
-    When I press "p"
-    And I press "p"
-    And I press "n"
+    When I move previous
+    And I move previous
+    And I move next
     Then "commit2" should be hilighted
 
 Feature: Saving
@@ -63,28 +63,16 @@ Feature: Deleting
   Scenario: Add, delete, confirm
     Given I start Goalie
     And I add commitment "commit1"
-    And I press "p"
-    When I start an action chain
-    And I press "d"
-    And I press "y"
-    And I execute the action chain
+    And I move previous
+    When I delete current commitment
     Then "commit1" should not be a commitment
     And "Add Commitment" should be hilighted
 
   Scenario: Add, delete, restart
     Given I start Goalie
     And I add commitment "commit1"
-    And I press "p"
-    When I start an action chain
-    And I press "d"
-    And I press "y"
-    And I execute the action chain
+    And I move previous
+    When I delete current commitment
     And I quit Goalie
     and I start Goalie
     Then "commit1" should not be a commitment
-
-    
-
-
-
-

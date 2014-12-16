@@ -53,3 +53,18 @@
 (When "I quit Goalie"
       (lambda ()
         (kill-buffer)))
+
+(When "I delete current commitment"
+      (lambda ()
+        (When "I start an action chain")
+        (When "I press \"d\"")
+        (When "I press \"y\"")
+        (When "I execute the action chain")))
+
+(When "I move previous"
+      (lambda ()
+        (When "I press \"p\"")))
+
+(When "I move next"
+      (lambda ()
+        (When "I press \"n\"")))
