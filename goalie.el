@@ -67,8 +67,9 @@
   (switch-to-buffer "*goalie*")
   (goalie-mode))
 
-(defun goalie--insert-line (external-interface hilight-fun text)
-  (insert (concat (funcall hilight-fun external-interface text) "\n")))
+(defun goalie--insert-line (external-interface hilight-fun text commit-line)
+  (let ((boxes (if commit-line " [ ] " "")))
+    (insert (concat boxes (funcall hilight-fun external-interface text) "\n"))))
 
 (defmethod goalie--hilight-fun ((obj goalie--external-emacs) text)
   (propertize text 'face '((:foreground "red"))))
@@ -84,11 +85,12 @@
     (mapc (lambda (each) (goalie--insert-line
                           obj
                           (car each)
-                          (cadr each)))
+                          (cadr each)
+                          t))
           commit)
     (insert "\n")
     (goalie--insert-header-line "Today's Commitments (Date goes here)")
-    (goalie--insert-line obj hl "-- Add Commitment --")))
+    (goalie--insert-line obj hl "-- Add Commitment --" nil)))
 
 (defmethod goalie--prompt-for-new-commitment ((obj goalie--external-emacs))
   (read-string "What is your commitment? "))

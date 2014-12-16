@@ -19,7 +19,7 @@
 
 (Then "\"\\([^\"]+\\)\" should be a commitment"
       (lambda (new-commitment)
-        (Then (format "I should see %S" new-commitment))))
+        (cl-assert (s-matches? (concat "-*\[ \]-*" new-commitment) (buffer-string)))))
 
 (Then "\"\\([^\"]+\\)\" should not be a commitment"
       (lambda (new-commitment)
