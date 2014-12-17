@@ -68,3 +68,13 @@
 (When "I move next"
       (lambda ()
         (When "I press \"n\"")))
+
+(When "I mark current as complete"
+      (lambda ()
+        (When "I start an action chain")
+        (When "I press \"RET\"")
+        (When "I execute the action chain")))
+
+(Then "^\"\\([^\"]+\\)\" should be a completeted commitment$"
+      (lambda (arg)
+        (cl-assert (s-matches? (concat "-*\[\*\]-*" new-commitment) (buffer-string)))))
