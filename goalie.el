@@ -122,10 +122,11 @@
 (defgeneric goalie--hilight-fun (text))
 
 
-(defun goalie--update-state (new-state)
-  (setq goalie--existing-commitments new-state)
-  (goalie--prepare-and-save-content goalie--existing-commitments)
-  (goalie--call-render))
+(defmacro with-goalie-state-update (new-state-code)
+  `(progn
+     (setq goalie--existing-commitments ,new-state-code)
+     (goalie--prepare-and-save-content goalie--existing-commitments)
+     (goalie--call-render)))
 
 (defun goalie--call-render ()
   (let ((hilight-add (goalie--get-hilight-fun
@@ -141,17 +142,17 @@
 
 
 (defun goalie--handle-execute ()
-  (let* ((new-commit (goalie--prompt-for-new-commitment goalie--interface))
-         (new-state (goalie--add-commitment goalie--existing-commitments
-                                            new-commit)))
-    (goalie--update-state new-state)))
+  (let* ((new-commit (goalie--prompt-for-new-commitment goalie--interface)))
+    (with-goalie-state-update
+     (goalie--add-commitment goalie--existing-commitments
+                             new-commit))))
 
 (defun goalie--request-delete ()
   (let ((hilighted (goalie--hilight-index goalie--existing-commitments)))
     (if (not (null hilighted))
         (if (goalie--prompt-for-delete goalie--interface)
-            (let ((new-state (-remove-at hilighted goalie--existing-commitments)))
-              (goalie--update-state new-state))))))
+            (with-goalie-state-update
+             (-remove-at hilighted goalie--existing-commitments))))))
 
 (defun goalie--move-previous ()
   (goalie--move #'goalie--prev-index))
@@ -160,10 +161,10 @@
   (goalie--move #'goalie--next-index))
 
 (defun goalie--move (movefun)
-  (let ((new-state (goalie--move-hilight
-                    goalie--existing-commitments
-                    movefun)))
-    (goalie--update-state new-state)))
+  (with-goalie-state-update
+   (goalie--move-hilight
+    goalie--existing-commitments
+    movefun)))
 
 (defvar goalie--existing-commitments '())
 (defvar goalie--interface '())
