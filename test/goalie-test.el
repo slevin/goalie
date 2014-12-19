@@ -127,6 +127,17 @@
 
 ;;; Simpler function tests
 
+(ert-deftest line-class ()
+  "goalie--line-c"
+  (let ((line (goalie--line-c "test"
+                              :text "testline"
+                              :hilight-fun #'identity
+                              :commit-marker-fun #'ignore)))
+    (should (equal "testline" (oref line text)))
+    (should (equal #'identity (oref line hilight-fun)))
+    (should (equal #'ignore (oref line commit-marker-fun))))
+  )
+
 (ert-deftest hilight-index ()
   "goalie--hilight-index"
   (should (null (goalie--hilight-index
