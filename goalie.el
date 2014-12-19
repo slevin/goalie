@@ -67,9 +67,10 @@
   (switch-to-buffer "*goalie*")
   (goalie-mode))
 
-(defun goalie--insert-line (external-interface hilight-fun text commit-line)
-  (let ((boxes (if commit-line " [ ] " "")))
-    (insert (concat boxes (funcall hilight-fun external-interface text) "\n"))))
+(defun goalie--insert-line (external-interface hilight-fun text commit-marker)
+  (insert (concat (funcall commit-marker external-interface)
+                  (funcall hilight-fun external-interface text)
+                  "\n")))
 
 (defmethod goalie--hilight-fun ((obj goalie--external-emacs) text)
   (propertize text 'face '((:foreground "red"))))
@@ -84,13 +85,14 @@
     (goalie--insert-header-line "Open Commitments")
     (mapc (lambda (each) (goalie--insert-line
                           obj
-                          (car each)
+                          (caar each)
+                          (cdar each)
                           (cadr each)
                           t))
           commit)
     (insert "\n")
     (goalie--insert-header-line "Today's Commitments (Date goes here)")
-    (goalie--insert-line obj hl "-- Add Commitment --" nil)))
+    (goalie--insert-line obj hl "-- Add Commitment --" #'goalie--non-commit-marker)))
 
 (defmethod goalie--prompt-for-new-commitment ((obj goalie--external-emacs))
   (read-string "What is your commitment? "))
@@ -109,6 +111,15 @@
   (with-temp-file goalie--save-file-path
     (insert content-string)))
 
+(defmethod goalie--non-commit-marker ((obj goalie--external-emacs))
+  "")
+
+(defmethod goalie--commit-marker ((obj goalie--external-emacs))
+  " [ ] ")
+
+(defmethod goalie--commit-marker-complete ((obj goalie--external-emacs))
+  " [*] ")
+
 ;; ---------------------------------------------------------
 ;; Interaction Code (The Sauce)
 ;; ---------------------------------------------------------
@@ -120,7 +131,9 @@
 (defgeneric goalie--prompt-for-new-commitment ())
 (defgeneric goalie--prompt-for-delete ())
 (defgeneric goalie--hilight-fun (text))
-
+(defgeneric goalie--non-commit-marker ())
+(defgeneric goalie--commit-marker ())
+(defgeneric goalie--commit-marker-complete ())
 
 (defmacro with-goalie-state-update (new-state-code)
   `(progn
@@ -166,6 +179,12 @@
     goalie--existing-commitments
     movefun)))
 
+(defclass goalie--line-c ()
+  ((text :initarg :text
+         :type string)
+   (hilight-fun :initarg :hilight-fun)
+   (commit-marker-fun :initarg :commit-marker-fun)))
+
 (defvar goalie--existing-commitments '())
 (defvar goalie--interface '())
 
@@ -195,6 +214,13 @@
 
 (defun goalie--non-hilight (interface text)
   text)
+
+(defun goalie--get-commit-marker-fun (commit)
+  (if (equal commit 'commit)
+      #'goalie--commit-marker
+    (if (equal commit 'complete)
+        #'goalie--commit-marker-complete
+      #'goalie--non-commit-marker)))
 
 (defun goalie--add-commitment (existing new)
   (append existing (list (list nil new-commit))))
