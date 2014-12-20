@@ -138,9 +138,10 @@
   `(progn
      (setq goalie--existing-commitments ,new-state-code)
      (goalie--prepare-and-save-content goalie--existing-commitments)
-     (apply #'goalie--render-ui
-            goalie--interface
-            (goalie--build-lines goalie--existing-commitments))))
+     (goalie--render-ui goalie--interface
+                        (goalie--build-commit-lines goalie--existing-commitments)
+                        (goalie--build-add-line goalie--existing-commitments)
+                        )))
 
 (defun goalie--handle-execute ()
   (let* ((new-commit (goalie--prompt-for-new-commitment goalie--interface)))
@@ -197,17 +198,18 @@
 
 
 
-(defun goalie--build-lines (commitments)
-  (let ((hilight-add (goalie--get-hilight-fun
-                      (-none?
-                       (lambda (item) (car item))
-                       commitments)))
-        (render-commitments (mapcar (lambda (each)
-                                      (list (goalie--get-hilight-fun
-                                             (car each))
-                                            (cadr each)))
-                                    commitments)))
-    (list render-commitments hilight-add)))
+(defun goalie--build-add-line (commitments)
+  (goalie--get-hilight-fun
+   (-none?
+    (lambda (item) (car item))
+    commitments)))
+
+(defun goalie--build-commit-lines (commitments)
+  (mapcar (lambda (each)
+            (list (goalie--get-hilight-fun
+                   (car each))
+                  (cadr each)))
+          commitments))
 
 
 (defun goalie--get-hilight-fun (hilight)
