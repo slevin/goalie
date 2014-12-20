@@ -138,20 +138,9 @@
   `(progn
      (setq goalie--existing-commitments ,new-state-code)
      (goalie--prepare-and-save-content goalie--existing-commitments)
-     (goalie--call-render goalie--existing-commitments)))
-
-(defun goalie--call-render (commitments)
-  (let ((hilight-add (goalie--get-hilight-fun
-                      (-none?
-                       (lambda (item) (car item))
-                       commitments)))
-        (render-commitments (mapcar (lambda (each)
-                                      (list (goalie--get-hilight-fun
-                                             (car each))
-                                            (cadr each)))
-                                    commitments)))
-    (goalie--render-ui goalie--interface render-commitments hilight-add)))
-
+     (apply #'goalie--render-ui
+            goalie--interface
+            (goalie--build-lines goalie--existing-commitments))))
 
 (defun goalie--handle-execute ()
   (let* ((new-commit (goalie--prompt-for-new-commitment goalie--interface)))
@@ -178,12 +167,6 @@
     goalie--existing-commitments
     movefun)))
 
-(defclass goalie--line-c ()
-  ((text :initarg :text
-         :type string)
-   (hilight-fun :initarg :hilight-fun)
-   (commit-marker-fun :initarg :commit-marker-fun)))
-
 (defvar goalie--existing-commitments '())
 (defvar goalie--interface '())
 
@@ -204,6 +187,27 @@
 ;; ---------------------------------------------------------
 ;; Logic Code (The Cheese)
 ;; ---------------------------------------------------------
+
+
+(defclass goalie--line-c ()
+  ((text :initarg :text
+         :type string)
+   (hilight-fun :initarg :hilight-fun)
+   (commit-marker-fun :initarg :commit-marker-fun)))
+
+
+
+(defun goalie--build-lines (commitments)
+  (let ((hilight-add (goalie--get-hilight-fun
+                      (-none?
+                       (lambda (item) (car item))
+                       commitments)))
+        (render-commitments (mapcar (lambda (each)
+                                      (list (goalie--get-hilight-fun
+                                             (car each))
+                                            (cadr each)))
+                                    commitments)))
+    (list render-commitments hilight-add)))
 
 
 (defun goalie--get-hilight-fun (hilight)
