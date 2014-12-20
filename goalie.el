@@ -85,10 +85,9 @@
     (goalie--insert-header-line "Open Commitments")
     (mapc (lambda (each) (goalie--insert-line
                           obj
-                          (caar each)
-                          (cdar each)
+                          (car each)
                           (cadr each)
-                          t))
+                          #'goalie--commit-marker))
           commit)
     (insert "\n")
     (goalie--insert-header-line "Today's Commitments (Date goes here)")
@@ -139,18 +138,18 @@
   `(progn
      (setq goalie--existing-commitments ,new-state-code)
      (goalie--prepare-and-save-content goalie--existing-commitments)
-     (goalie--call-render)))
+     (goalie--call-render goalie--existing-commitments)))
 
-(defun goalie--call-render ()
+(defun goalie--call-render (commitments)
   (let ((hilight-add (goalie--get-hilight-fun
                       (-none?
                        (lambda (item) (car item))
-                       goalie--existing-commitments)))
+                       commitments)))
         (render-commitments (mapcar (lambda (each)
                                       (list (goalie--get-hilight-fun
                                              (car each))
                                             (cadr each)))
-                                    goalie--existing-commitments)))
+                                    commitments)))
     (goalie--render-ui goalie--interface render-commitments hilight-add)))
 
 
@@ -193,7 +192,7 @@
   (setq goalie--existing-commitments (goalie--parse-saved-content
                                       (goalie--read-saved-content interface)))
   (goalie--initialize-ui interface)
-  (goalie--call-render))
+  (goalie--call-render goalie--existing-commitments))
 
 (defun goalie ()
   "Start goalie."
