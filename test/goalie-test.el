@@ -125,6 +125,32 @@
    (should (equal t *delete-prompted*))
    (should (equal *goalie-render-commitments* (list (list #'goalie--non-hilight "commit2"))))))
 
+;;; line builder
+(ert-deftest build-add-line-hi ()
+  "add commitment line is hilighted line"
+  (let* ((coms (list (list nil "commit1")
+                     (list nil "commit2")))
+         (al (goalie--build-add-line coms))
+         (cl (car (goalie--build-commit-lines coms))))
+    (should (equal #'goalie--hilight-fun (oref al hilight-fun)))
+    (should (equal #'goalie--non-commit-marker (oref al commit-marker-fun)))
+
+    (should (equal #'goalie--non-hilight (oref cl hilight-fun)))
+    (should (equal #'goalie--commit-marker (oref cl commit-marker-fun)))
+    ))
+
+(ert-deftest build-add-line-nonhi ()
+  "add commitment line is not hilighted"
+  (let* ((coms (list (list t "commit1")
+                     (list nil "commit2")))
+         (al (goalie--build-add-line coms))
+         (cl (car (goalie--build-commit-lines coms))))
+    (should (equal #'goalie--non-hilight (oref al hilight-fun)))
+    (should (equal #'goalie--non-commit-marker (oref al commit-marker-fun)))
+
+    (should (equal #'goalie--hilight-fun (oref cl hilight-fun)))
+    (should (equal #'goalie--commit-marker (oref cl commit-marker-fun)))))
+
 ;;; Simpler function tests
 
 (ert-deftest line-class ()
