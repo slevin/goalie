@@ -189,10 +189,10 @@
 
 (defun goalie-start (interface)
   (setq goalie--interface interface)
-  (setq goalie--existing-commitments (goalie--parse-saved-content
-                                      (goalie--read-saved-content interface)))
   (goalie--initialize-ui interface)
-  (goalie--call-render goalie--existing-commitments))
+  (with-goalie-state-update
+   (goalie--parse-saved-content
+    (goalie--read-saved-content goalie--interface))))
 
 (defun goalie ()
   "Start goalie."
