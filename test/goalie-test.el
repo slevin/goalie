@@ -56,26 +56,27 @@
   "read in content"
   (setq saved-content-string "(\"commit one\" \"commit two\")")
   (with-my-fixture
-   (should (equal *goalie-render-commitments*
-                  (list (list #'goalie--non-hilight "commit one")
-                        (list #'goalie--non-hilight "commit two"))))))
+   (let ((cl1 (car *goalie-render-commitments*))
+         (cl2 (cadr *goalie-render-commitments*)))
+     (should (equal "commit one" (oref cl1 text)))
+     (should (equal "commit two" (oref cl2 text))))))
 
 (ert-deftest add-renders-new ()
   "After adding commitment it should show up in today list"
   (with-my-fixture
    (goalie--handle-execute)
-   (should (equal *goalie-render-commitments*
-                  (list (list #'goalie--non-hilight "commit1"))))
-   (should (equal *goalie-render-hilight* #'goalie--hilight-fun))))
+   (should (equal "commit1" (oref (car *goalie-render-commitments*) text)))
+   (should (equal #'goalie--hilight-fun (oref *goalie-render-hilight* hilight-fun)))))
 
 (ert-deftest add-multiple-renders-multiple ()
   "adding multiple times should return multiple"
   (with-my-fixture
    (goalie--handle-execute)
    (goalie--handle-execute)
-   (should (equal *goalie-render-commitments*
-                  (list (list #'goalie--non-hilight "commit1")
-                        (list #'goalie--non-hilight  "commit2"))))))
+   (let ((c1 (car *goalie-render-commitments*))
+         (c2 (cadr *goalie-render-commitments*)))
+     (should (equal "commit1" (oref c1 text)))
+     (should (equal "commit2" (oref c2 text))))))
 
 (ert-deftest add-commits-saves-state ()
   "After adding content is saved through save function"
@@ -83,27 +84,6 @@
    (goalie--handle-execute)
    (goalie--handle-execute)
    (should (equal *goalie-saved-content* "(\"commit1\" \"commit2\")"))))
-
-(ert-deftest add-move-previous ()
-  "adding one and move previous should highlight have that one highlighted"
-  (with-my-fixture
-   (goalie--handle-execute)
-   (goalie--move-previous)
-   (should (equal *goalie-render-commitments*
-                  (list (list #'goalie--hilight-fun "commit1"))))
-   (should (equal *goalie-render-hilight* #'goalie--non-hilight))))
-
-(ert-deftest add-move-previous-2x ()
-  "moving previous twice hilights top one"
-  (with-my-fixture
-   (goalie--handle-execute)
-   (goalie--handle-execute)
-   (goalie--move-previous)
-   (goalie--move-previous)
-   (should (equal *goalie-render-commitments*
-                  (list (list #'goalie--hilight-fun "commit1")
-                        (list #'goalie--non-hilight "commit2"))))))
-
 
 (ert-deftest delete-nothing ()
   "delete in initial nothing state should do nothing"
@@ -123,7 +103,7 @@
    (setq delete-prompt-return t)
    (goalie--request-delete)
    (should (equal t *delete-prompted*))
-   (should (equal *goalie-render-commitments* (list (list #'goalie--non-hilight "commit2"))))))
+   (should (equal "commit2" (oref (car *goalie-render-commitments*) text)))))
 
 ;;; line builder
 (ert-deftest build-add-line-hi ()
