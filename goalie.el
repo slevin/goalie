@@ -199,13 +199,21 @@
    (hilight-fun :initarg :hilight-fun)
    (commit-marker-fun :initarg :commit-marker-fun)))
 
+(defclass goalie--commitment-c ()
+  ((text :initarg :text
+         :type string)
+   (hilighted :initarg :hilighted
+              :initform nil)
+   (completed :initarg :completed
+              :initform nil)))
+
 
 (defun goalie--build-add-line (commitments)
   (goalie--line-c "addline"
                   :text "-- Add Commitment --"
                   :hilight-fun (goalie--get-hilight-fun
                                 (-none?
-                                 (lambda (item) (car item))
+                                 (lambda (item) (oref item hilighted))
                                  commitments))
                   :commit-marker-fun #'goalie--non-commit-marker))
 
@@ -213,12 +221,11 @@
 (defun goalie--build-commit-lines (commitments)
   (mapcar (lambda (each)
             (goalie--line-c "commit"
-                            :text (cadr each)
-                            :hilight-fun (goalie--get-hilight-fun (car each))
+                            :text (oref each text)
+                            :hilight-fun (goalie--get-hilight-fun
+                                          (oref each hilighted))
                             :commit-marker-fun #'goalie--commit-marker))
           commitments))
-
-
 
 
 (defun goalie--get-hilight-fun (hilight)
@@ -237,7 +244,7 @@
       #'goalie--non-commit-marker)))
 
 (defun goalie--add-commitment (existing new)
-  (append existing (list (list nil new-commit))))
+  (append existing (list (goalie--commitment-c new :text new))))
 
 (defun goalie--move-hilight (existing movefun)
   (goalie--update-hilight-index
@@ -248,16 +255,14 @@
 
 (defun goalie--hilight-index (existing-commitments)
   (-find-index
-   (lambda (item) (not (null (car item))))
+   (lambda (item) (not (null (oref item hilighted))))
    existing-commitments))
 
 (defun goalie--update-hilight-index (newindex existing-commitments)
   (-map-indexed
    (lambda (idx item)
-     (list (cond ((null newindex) nil)
-                 ((= idx newindex) t)
-                 (t nil))
-           (cadr item)))
+     (if (equal idx newindex) (oset item hilighted t) (oset item hilighted nil))
+     item)
    existing-commitments))
 
 (defun goalie--prev-index (currentindex existing-commitments)
@@ -277,10 +282,10 @@
                     (let ((parsed (car (read-from-string content-string))))
                       (if (listp parsed) parsed '()))
                   (error '()))))
-    (mapcar (lambda (item) (list nil item)) parsed)))
+    (mapcar (lambda (item) (goalie--commitment-c item :text item)) parsed)))
 
 (defun goalie--prepare-content (content)
-  (prin1-to-string (mapcar (lambda (item) (cadr item)) content)))
+  (prin1-to-string (mapcar (lambda (item) (oref item text)) content)))
 
 
 (defun goalie--prepare-and-save-content (content)

@@ -108,8 +108,8 @@
 ;;; line builder
 (ert-deftest build-add-line-hi ()
   "add commitment line is hilighted line"
-  (let* ((coms (list (list nil "commit1")
-                     (list nil "commit2")))
+  (let* ((coms (list (goalie--commitment-c "commit1" :text "commit1")
+                     (goalie--commitment-c "commit2" :text "commit2")))
          (al (goalie--build-add-line coms))
          (cl (car (goalie--build-commit-lines coms))))
     (should (equal #'goalie--hilight-fun (oref al hilight-fun)))
@@ -121,8 +121,8 @@
 
 (ert-deftest build-add-line-nonhi ()
   "add commitment line is not hilighted"
-  (let* ((coms (list (list t "commit1")
-                     (list nil "commit2")))
+  (let* ((coms (list (goalie--commitment-c "commit1" :text "commit1" :hilighted t)
+                     (goalie--commitment-c "commit2" :text "commit2")))
          (al (goalie--build-add-line coms))
          (cl (car (goalie--build-commit-lines coms))))
     (should (equal #'goalie--non-hilight (oref al hilight-fun)))
@@ -144,33 +144,46 @@
     (should (equal #'ignore (oref line commit-marker-fun))))
   )
 
+(ert-deftest commitment-class ()
+  "goalie--commitment-c"
+  (let ((commit (goalie--commitment-c "com"
+                                      :text "com1")))
+    (should (equal "com1" (oref commit text)))
+    (should (null (oref commit hilighted)))
+    (should (null (oref commit completed)))
+    (oset commit hilighted t)
+    (oset commit completed t)
+    (should (equal t (oref commit hilighted)))
+    (should (equal t (oref commit completed)))))
+
 (ert-deftest hilight-index ()
   "goalie--hilight-index"
   (should (null (goalie--hilight-index
-                 (list (list nil 'commit1)
-                       (list nil 'commit2)))))
+                 (list (goalie--commitment-c "com1" :text "commit1" :hilighted nil)
+                       (goalie--commitment-c "com2" :text "commit2" :hilighted nil)))))
 
   (should (equal 0 (goalie--hilight-index
-                    (list (list t 'commit1)
-                          (list nil 'commit2)))))
+                    (list (goalie--commitment-c "com1" :text "commit1" :hilighted t)
+                          (goalie--commitment-c "com2" :text "commit2" :hilighted nil)))))
 
   (should (equal 1 (goalie--hilight-index
-                    (list (list nil 'commit1)
-                          (list t 'commit2))))))
+                    (list (goalie--commitment-c "com1" :text "commit1" :hilighted nil)
+                          (goalie--commitment-c "com2" :text "commit2" :hilighted t))))))
 
 (ert-deftest update-hilight-index ()
   "goalie--update-hilight-index"
-  (should (equal (list (list nil 'commit1)
-                       (list nil 'commit2))
+  (should (equal (list (goalie--commitment-c "com1" :text "commit1" :hilighted nil)
+                       (goalie--commitment-c "com2" :text "commit2" :hilighted nil))
                  (goalie--update-hilight-index nil
-                                               (list (list nil 'commit1)
-                                                     (list nil 'commit2)))))
+                                               (list (goalie--commitment-c "com1" :text "commit1")
+                                                     (goalie--commitment-c "com2" :text "commit2")))))
 
-  (should (equal (list (list t 'commit1)
-                       (list nil 'commit2))
+  (should (equal (list (goalie--commitment-c "com1" :text "commit1" :hilighted t)
+                       (goalie--commitment-c "com2" :text "commit2"))
                  (goalie--update-hilight-index 0
-                                               (list (list nil 'commit1)
-                                                     (list t 'commit2))))))
+                                               (list (goalie--commitment-c "com1" :text "commit1" :hilighted nil)
+                                                     (goalie--commitment-c "com2" :text "commit2" :hilighted t)))))
+  )
 
 (ert-deftest prev-index ()
   "goalie--prev-index"
@@ -196,14 +209,14 @@
 
 (ert-deftest parse ()
   "goalie--parse-saved-content"
-  (should (equal (list (list nil 'commit1)
-                       (list nil 'commit2))
-                 (goalie--parse-saved-content "(commit1 commit2)")))
+  (should (equal (list (goalie--commitment-c "commit1" :text "commit1")
+                       (goalie--commitment-c "commit2" :text "commit2"))
+                 (goalie--parse-saved-content "(\"commit1\" \"commit2\")")))
   (should (null (goalie--parse-saved-content "")))
   (should (null (goalie--parse-saved-content "parsable non list"))))
 
 (ert-deftest prepare ()
   "goalie--prepare-saved-content"
-  (should (equal "(commit1 commit2)"
-                 (goalie--prepare-content (list (list nil 'commit1)
-                                                (list nil 'commit2))))))
+  (should (equal "(\"commit1\" \"commit2\")"
+                 (goalie--prepare-content (list (goalie--commitment-c "commit1" :text "commit1")
+                                                (goalie--commitment-c "commit2" :text "commit2"))))))
