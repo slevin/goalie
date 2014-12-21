@@ -72,6 +72,14 @@
                   (funcall hilight-fun external-interface text)
                   "\n")))
 
+(defun goalie--insert-line (external-interface line)
+  (insert (concat (funcall (oref line commit-marker-fun)
+                           external-interface)
+                  (funcall (oref line hilight-fun)
+                           external-interface
+                           (oref line text))
+                  "\n")))
+
 (defmethod goalie--hilight-fun ((obj goalie--external-emacs) text)
   (propertize text 'face '((:foreground "red"))))
 
@@ -79,19 +87,14 @@
   (let ((fline (propertize line 'face '((:foreground "medium sea green")))))
     (insert (concat fline "\n"))))
 
-(defmethod goalie--render-ui ((obj goalie--external-emacs) commit hl)
+(defmethod goalie--render-ui ((obj goalie--external-emacs) commit-ls add-l)
   (let ((inhibit-read-only t))
     (erase-buffer)
     (goalie--insert-header-line "Open Commitments")
-    (mapc (lambda (each) (goalie--insert-line
-                          obj
-                          (car each)
-                          (cadr each)
-                          #'goalie--commit-marker))
-          commit)
+    (mapc (lambda (each) (goalie--insert-line obj each)) commit-ls)
     (insert "\n")
     (goalie--insert-header-line "Today's Commitments (Date goes here)")
-    (goalie--insert-line obj hl "-- Add Commitment --" #'goalie--non-commit-marker)))
+    (goalie--insert-line obj add-l)))
 
 (defmethod goalie--prompt-for-new-commitment ((obj goalie--external-emacs))
   (read-string "What is your commitment? "))
@@ -138,9 +141,10 @@
   `(progn
      (setq goalie--existing-commitments ,new-state-code)
      (goalie--prepare-and-save-content goalie--existing-commitments)
-     (apply #'goalie--render-ui
-            goalie--interface
-            (goalie--build-lines goalie--existing-commitments))))
+     (goalie--render-ui goalie--interface
+                        (goalie--build-commit-lines goalie--existing-commitments)
+                        (goalie--build-add-line goalie--existing-commitments)
+                        )))
 
 (defun goalie--handle-execute ()
   (let* ((new-commit (goalie--prompt-for-new-commitment goalie--interface)))
@@ -196,18 +200,25 @@
    (commit-marker-fun :initarg :commit-marker-fun)))
 
 
+(defun goalie--build-add-line (commitments)
+  (goalie--line-c "addline"
+                  :text "-- Add Commitment --"
+                  :hilight-fun (goalie--get-hilight-fun
+                                (-none?
+                                 (lambda (item) (car item))
+                                 commitments))
+                  :commit-marker-fun #'goalie--non-commit-marker))
 
-(defun goalie--build-lines (commitments)
-  (let ((hilight-add (goalie--get-hilight-fun
-                      (-none?
-                       (lambda (item) (car item))
-                       commitments)))
-        (render-commitments (mapcar (lambda (each)
-                                      (list (goalie--get-hilight-fun
-                                             (car each))
-                                            (cadr each)))
-                                    commitments)))
-    (list render-commitments hilight-add)))
+
+(defun goalie--build-commit-lines (commitments)
+  (mapcar (lambda (each)
+            (goalie--line-c "commit"
+                            :text (cadr each)
+                            :hilight-fun (goalie--get-hilight-fun (car each))
+                            :commit-marker-fun #'goalie--commit-marker))
+          commitments))
+
+
 
 
 (defun goalie--get-hilight-fun (hilight)
