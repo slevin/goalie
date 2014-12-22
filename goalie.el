@@ -32,6 +32,7 @@
     (define-key map (kbd "n") 'goalie-goto-next)
     (define-key map (kbd "p") 'goalie-goto-previous)
     (define-key map (kbd "d") 'goalie-delete-commitment)
+    (define-key map (kbd "a") 'goalie-add-commitment)
     (define-key map (kbd "RET") 'goalie-execute)
     map)
   "Goalie key map.")
@@ -52,6 +53,10 @@
 (defun goalie-execute ()
   (interactive)
   (goalie--handle-execute))
+
+(defun goalie-add-commitment ()
+  (interactive)
+  (goalie--prompt-for-commitment))
 
 (defun goalie-delete-commitment ()
   (interactive)
@@ -87,14 +92,13 @@
   (let ((fline (propertize line 'face '((:foreground "medium sea green")))))
     (insert (concat fline "\n"))))
 
-(defmethod goalie--render-ui ((obj goalie--external-emacs) commit-ls add-l)
+(defmethod goalie--render-ui ((obj goalie--external-emacs) commit-ls)
   (let ((inhibit-read-only t))
     (erase-buffer)
     (goalie--insert-header-line "Open Commitments")
     (mapc (lambda (each) (goalie--insert-line obj each)) commit-ls)
     (insert "\n")
-    (goalie--insert-header-line "Today's Commitments (Date goes here)")
-    (goalie--insert-line obj add-l)))
+    (goalie--insert-header-line "Today's Commitments (Date goes here)")))
 
 (defmethod goalie--prompt-for-new-commitment ((obj goalie--external-emacs))
   (read-string "What is your commitment? "))
@@ -142,11 +146,12 @@
      (setq goalie--existing-commitments ,new-state-code)
      (goalie--prepare-and-save-content goalie--existing-commitments)
      (goalie--render-ui goalie--interface
-                        (goalie--build-commit-lines goalie--existing-commitments)
-                        (goalie--build-add-line goalie--existing-commitments)
-                        )))
+                        (goalie--build-commit-lines goalie--existing-commitments goalie--current-hilight-index))))
 
 (defun goalie--handle-execute ()
+  )
+
+(defun goalie--prompt-for-commitment ()
   (let* ((new-commit (goalie--prompt-for-new-commitment goalie--interface)))
     (with-goalie-state-update
      (goalie--add-commitment goalie--existing-commitments
@@ -173,6 +178,7 @@
 
 (defvar goalie--existing-commitments '())
 (defvar goalie--interface '())
+(defvar goalie--current-hilight-index '())
 
 (defun goalie-start (interface)
   (setq goalie--interface interface)
@@ -208,24 +214,15 @@
               :initform nil)))
 
 
-(defun goalie--build-add-line (commitments)
-  (goalie--line-c "addline"
-                  :text "-- Add Commitment --"
-                  :hilight-fun (goalie--get-hilight-fun
-                                (-none?
-                                 (lambda (item) (oref item hilighted))
-                                 commitments))
-                  :commit-marker-fun #'goalie--non-commit-marker))
-
-
-(defun goalie--build-commit-lines (commitments)
-  (mapcar (lambda (each)
-            (goalie--line-c "commit"
-                            :text (oref each text)
-                            :hilight-fun (goalie--get-hilight-fun
-                                          (oref each hilighted))
-                            :commit-marker-fun #'goalie--commit-marker))
-          commitments))
+(defun goalie--build-commit-lines (commitments current-hilight-index)
+  (-map-indexed (lambda (idx commit)
+                  (goalie--line-c "commit"
+                                  :text (oref commit text)
+                                  :hilight-fun (goalie--get-hilight-fun
+                                                (or (and (= idx 0) (null current-hilight-index))
+                                                    (equal idx current-hilight-index)))
+                                  :commit-marker-fun #'goalie--commit-marker))
+                commitments))
 
 
 (defun goalie--get-hilight-fun (hilight)

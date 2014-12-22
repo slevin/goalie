@@ -28,7 +28,7 @@
 (When "I add commitment \"\\([^\"]+\\)\""
       (lambda (new-commitment)
         (When "I start an action chain")
-        (When "I press \"RET\"")
+        (When "I press \"a\"")
         (When (format "I type %S" new-commitment))
         (When "I execute the action chain")))
 
