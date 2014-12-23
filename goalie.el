@@ -171,10 +171,12 @@
   (goalie--move #'goalie--next-index))
 
 (defun goalie--move (movefun)
-  (with-goalie-state-update
-   (goalie--move-hilight
-    goalie--existing-commitments
-    movefun)))
+  (setq goalie--current-hilight-index (funcall movefun
+                                               goalie--current-hilight-index
+                                               goalie--existing-commitments))
+  (goalie--prepare-and-save-content goalie--existing-commitments)
+  (goalie--render-ui goalie--interface
+                     (goalie--build-commit-lines goalie--existing-commitments goalie--current-hilight-index)))
 
 (defvar goalie--existing-commitments '())
 (defvar goalie--interface '())
@@ -243,31 +245,10 @@
 (defun goalie--add-commitment (existing new)
   (append existing (list (goalie--commitment-c new :text new))))
 
-(defun goalie--move-hilight (existing movefun)
-  (goalie--update-hilight-index
-   (funcall movefun
-            (goalie--hilight-index existing)
-            existing)
-   existing))
-
-(defun goalie--hilight-index (existing-commitments)
-  (-find-index
-   (lambda (item) (not (null (oref item hilighted))))
-   existing-commitments))
-
-(defun goalie--update-hilight-index (newindex existing-commitments)
-  (-map-indexed
-   (lambda (idx item)
-     (if (equal idx newindex) (oset item hilighted t) (oset item hilighted nil))
-     item)
-   existing-commitments))
-
 (defun goalie--prev-index (currentindex existing-commitments)
-  (if (> (length existing-commitments) 0)
-      (cond ((null currentindex) (1- (length existing-commitments)))
-            ((equal currentindex 0) 0)
-            (t (1- currentindex)))
-    nil))
+  (cond ((or (null currentindex) (equal 0 currentindex)) 0)
+        ((>= currentindex (length existing-commitments)) (1- (length existing-commitments)))
+        (t (1- currentindex))))
 
 (defun goalie--next-index (currentindex existing-commitments)
   (cond ((null currentindex) nil)
