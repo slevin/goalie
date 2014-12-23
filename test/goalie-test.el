@@ -5,7 +5,6 @@
 (defvar *goalie-saved-content* nil)
 (defvar *goalie-initialized* nil)
 (defvar *goalie-render-commitments* nil)
-(defvar *goalie-render-hilight* nil)
 (defvar *new-commitments* nil)
 (defvar *delete-prompted* nil)
 
@@ -23,9 +22,8 @@
 (defmethod goalie--initialize-ui ((obj goalie--external-test))
   (setq *goalie-initialized* t))
 
-(defmethod goalie--render-ui ((obj goalie--external-test) coms hl)
-  (setq *goalie-render-commitments* coms)
-  (setq *goalie-render-hilight* hl))
+(defmethod goalie--render-ui ((obj goalie--external-test) coms)
+  (setq *goalie-render-commitments* coms))
 
 (defmethod goalie--prompt-for-new-commitment ((obj goalie--external-test))
   (let ((return-commit (car *new-commitments*)))
@@ -62,17 +60,17 @@
      (should (equal "commit two" (oref cl2 text))))))
 
 (ert-deftest add-renders-new ()
-  "After adding commitment it should show up in today list"
+  "After adding commitment it should show up in today list hilighted"
   (with-my-fixture
-   (goalie--handle-execute)
+   (goalie--prompt-for-commitment)
    (should (equal "commit1" (oref (car *goalie-render-commitments*) text)))
-   (should (equal #'goalie--hilight-fun (oref *goalie-render-hilight* hilight-fun)))))
+   (should (equal #'goalie--hilight-fun (oref (car *goalie-render-commitments*) hilight-fun)))))
 
 (ert-deftest add-multiple-renders-multiple ()
   "adding multiple times should return multiple"
   (with-my-fixture
-   (goalie--handle-execute)
-   (goalie--handle-execute)
+   (goalie--prompt-for-commitment)
+   (goalie--prompt-for-commitment)
    (let ((c1 (car *goalie-render-commitments*))
          (c2 (cadr *goalie-render-commitments*)))
      (should (equal "commit1" (oref c1 text)))
@@ -81,8 +79,8 @@
 (ert-deftest add-commits-saves-state ()
   "After adding content is saved through save function"
   (with-my-fixture
-   (goalie--handle-execute)
-   (goalie--handle-execute)
+   (goalie--prompt-for-commitment)
+   (goalie--prompt-for-commitment)
    (should (equal *goalie-saved-content* "(\"commit1\" \"commit2\")"))))
 
 (ert-deftest delete-nothing ()
@@ -92,12 +90,11 @@
    (should (null *delete-prompted*))
    ))
 
-
 (ert-deftest delete-something ()
   "if something is hilighted then it should prompt for it and delete it"
   (with-my-fixture
-   (goalie--handle-execute)
-   (goalie--handle-execute)
+   (goalie--prompt-for-commitment)
+   (goalie--prompt-for-commitment)
    (goalie--move-previous)
    (goalie--move-previous)
    (setq delete-prompt-return t)
@@ -110,25 +107,17 @@
   "add commitment line is hilighted line"
   (let* ((coms (list (goalie--commitment-c "commit1" :text "commit1")
                      (goalie--commitment-c "commit2" :text "commit2")))
-         (al (goalie--build-add-line coms))
-         (cl (car (goalie--build-commit-lines coms))))
-    (should (equal #'goalie--hilight-fun (oref al hilight-fun)))
-    (should (equal #'goalie--non-commit-marker (oref al commit-marker-fun)))
-
-    (should (equal #'goalie--non-hilight (oref cl hilight-fun)))
+         (cl (car (goalie--build-commit-lines coms 0))))
+    (should (equal #'goalie--hilight-fun (oref cl hilight-fun)))
     (should (equal #'goalie--commit-marker (oref cl commit-marker-fun)))
     ))
 
 (ert-deftest build-add-line-nonhi ()
   "add commitment line is not hilighted"
-  (let* ((coms (list (goalie--commitment-c "commit1" :text "commit1" :hilighted t)
+  (let* ((coms (list (goalie--commitment-c "commit1" :text "commit1")
                      (goalie--commitment-c "commit2" :text "commit2")))
-         (al (goalie--build-add-line coms))
-         (cl (car (goalie--build-commit-lines coms))))
-    (should (equal #'goalie--non-hilight (oref al hilight-fun)))
-    (should (equal #'goalie--non-commit-marker (oref al commit-marker-fun)))
-
-    (should (equal #'goalie--hilight-fun (oref cl hilight-fun)))
+         (cl (car (goalie--build-commit-lines coms 1))))
+    (should (equal #'goalie--non-hilight (oref cl hilight-fun)))
     (should (equal #'goalie--commit-marker (oref cl commit-marker-fun)))))
 
 ;;; Simpler function tests
@@ -149,32 +138,29 @@
   (let ((commit (goalie--commitment-c "com"
                                       :text "com1")))
     (should (equal "com1" (oref commit text)))
-    (should (null (oref commit hilighted)))
     (should (null (oref commit completed)))
-    (oset commit hilighted t)
     (oset commit completed t)
-    (should (equal t (oref commit hilighted)))
     (should (equal t (oref commit completed)))))
 
 (ert-deftest prev-index ()
   "goalie--prev-index"
-  (let ((exist (list (list nil 'commit1)
-                     (list nil 'commit2))))
+  ;; empty list always goes to 0
+  (should (equal 0 (goalie--prev-index 0 '())))
+  (let ((exist (list 'commit1 'commit2)))
     ;; stops at 0
     (should (equal 0 (goalie--prev-index 0 exist)))
     ;; moves previous
     (should (equal 0 (goalie--prev-index 1 exist)))
-    ;; last when at nil
-    (should (equal 1 (goalie--prev-index nil exist)))))
+    ;; last when greater
+    (should (equal 1 (goalie--prev-index 10 exist)))))
 
 (ert-deftest next-index ()
   "goalie--next-index"
-  (let ((exist (list (list nil 'commit1)
-                     (list nil 'commit2))))
-    ;; stops at nil
-    (should (null (goalie--next-index nil exist)))
-    ;; go to nil if at end
-    (should (null (goalie--next-index 1 exist)))
+  ;; empty list always goes to 0
+  (should (equal 0 (goalie--next-index 0 '())))
+  (let ((exist (list 'commit1 'commit2)))
+    ;; stops at end
+    (should (equal 1 (goalie--next-index 1 exist)))
     ;; should move next
     (should (equal 1 (goalie--next-index 0 exist)))))
 

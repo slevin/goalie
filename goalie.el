@@ -130,6 +130,7 @@
 ;; Interaction Code (The Sauce)
 ;; ---------------------------------------------------------
 
+;; external interface for user interactions
 (defgeneric goalie--read-saved-content ())
 (defgeneric goalie--save-content (content-string))
 (defgeneric goalie--initialize-ui ())
@@ -158,11 +159,11 @@
                              new-commit))))
 
 (defun goalie--request-delete ()
-  (let ((hilighted (goalie--hilight-index goalie--existing-commitments)))
-    (if (not (null hilighted))
-        (if (goalie--prompt-for-delete goalie--interface)
-            (with-goalie-state-update
-             (-remove-at hilighted goalie--existing-commitments))))))
+  (if (> (length goalie--existing-commitments) 0)
+      (if (goalie--prompt-for-delete goalie--interface)
+          (with-goalie-state-update
+           (-remove-at goalie--current-hilight-index
+                       goalie--existing-commitments)))))
 
 (defun goalie--move-previous ()
   (goalie--move #'goalie--prev-index))
@@ -180,7 +181,7 @@
 
 (defvar goalie--existing-commitments '())
 (defvar goalie--interface '())
-(defvar goalie--current-hilight-index '())
+(defvar goalie--current-hilight-index 0)
 
 (defun goalie-start (interface)
   (setq goalie--interface interface)
@@ -210,8 +211,6 @@
 (defclass goalie--commitment-c ()
   ((text :initarg :text
          :type string)
-   (hilighted :initarg :hilighted
-              :initform nil)
    (completed :initarg :completed
               :initform nil)))
 
@@ -221,8 +220,7 @@
                   (goalie--line-c "commit"
                                   :text (oref commit text)
                                   :hilight-fun (goalie--get-hilight-fun
-                                                (or (and (= idx 0) (null current-hilight-index))
-                                                    (equal idx current-hilight-index)))
+                                                (equal idx current-hilight-index))
                                   :commit-marker-fun #'goalie--commit-marker))
                 commitments))
 
@@ -246,13 +244,14 @@
   (append existing (list (goalie--commitment-c new :text new))))
 
 (defun goalie--prev-index (currentindex existing-commitments)
-  (cond ((or (null currentindex) (equal 0 currentindex)) 0)
+  (cond ((= 0 (length existing-commitments)) 0)
+        ((or (null currentindex) (equal 0 currentindex)) 0)
         ((>= currentindex (length existing-commitments)) (1- (length existing-commitments)))
         (t (1- currentindex))))
 
 (defun goalie--next-index (currentindex existing-commitments)
-  (cond ((null currentindex) nil)
-        ((= currentindex (1- (length existing-commitments))) nil)
+  (cond ((= 0 (length existing-commitments)) 0)
+        ((= currentindex (1- (length existing-commitments))) currentindex)
         (t (1+ currentindex))))
 
 (defun goalie--parse-saved-content (content-string)
