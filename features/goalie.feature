@@ -76,4 +76,4 @@ Feature: Completeting
     And I add commitment "commit1"
     And I move previous
     And I mark current as complete
-    Then "commit1" should be a completeted commitment
+    Then "commit1" should be a completed commitment

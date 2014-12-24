@@ -150,7 +150,9 @@
                         (goalie--build-commit-lines goalie--existing-commitments goalie--current-hilight-index))))
 
 (defun goalie--handle-execute ()
-  )
+  (with-goalie-state-update
+   (goalie--toggle-complete goalie--current-hilight-index
+                            goalie--existing-commitments)))
 
 (defun goalie--prompt-for-commitment ()
   (let* ((new-commit (goalie--prompt-for-new-commitment goalie--interface)))
@@ -221,7 +223,7 @@
                                   :text (oref commit text)
                                   :hilight-fun (goalie--get-hilight-fun
                                                 (equal idx current-hilight-index))
-                                  :commit-marker-fun #'goalie--commit-marker))
+                                  :commit-marker-fun (if (oref commit completed) #'goalie--commit-marker-complete #'goalie--commit-marker)))
                 commitments))
 
 
@@ -239,6 +241,13 @@
     (if (equal commit 'complete)
         #'goalie--commit-marker-complete
       #'goalie--non-commit-marker)))
+
+(defun goalie--toggle-complete (index commits)
+  (-map-indexed (lambda (idx com)
+                  (if (= idx index)
+                      (oset com completed (not (oref com completed))))
+                  com)
+                commits))
 
 (defun goalie--add-commitment (existing new)
   (append existing (list (goalie--commitment-c new :text new))))

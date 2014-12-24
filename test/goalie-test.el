@@ -103,6 +103,13 @@
    (should (equal "commit2" (oref (car *goalie-render-commitments*) text)))))
 
 ;;; line builder
+
+(ert-deftest build-complete-line ()
+  "a completed commitment should have a renderable completed line"
+  (let* ((coms (list (goalie--commitment-c "c1" :text "c1" :completed t)))
+        (cl (car (goalie--build-commit-lines coms 0))))
+    (should (equal #'goalie--commit-marker-complete (oref cl commit-marker-fun)))))
+
 (ert-deftest build-add-line-hi ()
   "add commitment line is hilighted line"
   (let* ((coms (list (goalie--commitment-c "commit1" :text "commit1")
@@ -121,6 +128,16 @@
     (should (equal #'goalie--commit-marker (oref cl commit-marker-fun)))))
 
 ;;; Simpler function tests
+
+(ert-deftest toggle-complete ()
+  "goalie--toggle-complete"
+  (let* ((coms (list (goalie--commitment-c "commit1" :text "commit1")
+                     (goalie--commitment-c "commit2" :text "commit2")))
+         (new (goalie--toggle-complete 1 coms)))
+    (should (equal nil (oref (car new) completed)))
+    (should (equal t (oref (cadr new) completed)))))
+
+
 
 (ert-deftest line-class ()
   "goalie--line-c"

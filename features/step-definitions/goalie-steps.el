@@ -19,7 +19,7 @@
 
 (Then "\"\\([^\"]+\\)\" should be a commitment"
       (lambda (new-commitment)
-        (cl-assert (s-matches? (concat "-*\[ \]-*" new-commitment) (buffer-string)))))
+        (cl-assert (s-matches? (concat "[[:space:]]*\\[[[:space:]]\\][[:space:]]*" new-commitment) (buffer-string)))))
 
 (Then "\"\\([^\"]+\\)\" should not be a commitment"
       (lambda (new-commitment)
@@ -75,6 +75,6 @@
         (When "I press \"RET\"")
         (When "I execute the action chain")))
 
-(Then "^\"\\([^\"]+\\)\" should be a completeted commitment$"
+(Then "^\"\\([^\"]+\\)\" should be a completed commitment$"
       (lambda (arg)
-        (cl-assert (s-matches? (concat "-*\[\*\]-*" new-commitment) (buffer-string)))))
+        (cl-assert (s-matches? (concat "[[:space:]]*\\[\\*\\][[:space:]]*" arg) (buffer-string)))))
