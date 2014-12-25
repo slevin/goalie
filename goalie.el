@@ -264,14 +264,13 @@
         (t (1+ currentindex))))
 
 (defun goalie--parse-saved-content (content-string)
-  (let ((parsed (condition-case nil
-                    (let ((parsed (car (read-from-string content-string))))
-                      (if (listp parsed) parsed '()))
-                  (error '()))))
-    (mapcar (lambda (item) (goalie--commitment-c item :text item)) parsed)))
+  (condition-case nil
+      (let ((parsed (car (read-from-string content-string))))
+        (if (listp parsed) parsed '()))
+    (error '())))
 
 (defun goalie--prepare-content (content)
-  (prin1-to-string (mapcar (lambda (item) (oref item text)) content)))
+  (prin1-to-string content))
 
 
 (defun goalie--prepare-and-save-content (content)

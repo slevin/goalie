@@ -52,12 +52,11 @@
 
 (ert-deftest start-reads-in-saved-content ()
   "read in content"
-  (setq saved-content-string "(\"commit one\" \"commit two\")")
+  (setq saved-content-string "([object goalie--commitment-c \"commit1\" \"commit1\" t])")
   (with-my-fixture
-   (let ((cl1 (car *goalie-render-commitments*))
-         (cl2 (cadr *goalie-render-commitments*)))
-     (should (equal "commit one" (oref cl1 text)))
-     (should (equal "commit two" (oref cl2 text))))))
+   (let ((cl1 (car *goalie-render-commitments*)))
+     (should (equal "commit1" (oref cl1 text)))
+     (should (equal #'goalie--commit-marker-complete (oref cl1 commit-marker-fun))))))
 
 (ert-deftest add-renders-new ()
   "After adding commitment it should show up in today list hilighted"
@@ -81,7 +80,7 @@
   (with-my-fixture
    (goalie--prompt-for-commitment)
    (goalie--prompt-for-commitment)
-   (should (equal *goalie-saved-content* "(\"commit1\" \"commit2\")"))))
+   (should (not (null *goalie-saved-content*)))))
 
 (ert-deftest delete-nothing ()
   "delete in initial nothing state should do nothing"
@@ -183,14 +182,10 @@
 
 (ert-deftest parse ()
   "goalie--parse-saved-content"
-  (should (equal (list (goalie--commitment-c "commit1" :text "commit1")
-                       (goalie--commitment-c "commit2" :text "commit2"))
-                 (goalie--parse-saved-content "(\"commit1\" \"commit2\")")))
+  (let* ((coms (list (goalie--commitment-c "commit1" :text "commit1" :completed t)
+                     (goalie--commitment-c "commit2" :text "commit2")))
+         (str (goalie--prepare-content coms))
+         (parsed (goalie--parse-saved-content str)))
+    (should (equal coms parsed)))
   (should (null (goalie--parse-saved-content "")))
   (should (null (goalie--parse-saved-content "parsable non list"))))
-
-(ert-deftest prepare ()
-  "goalie--prepare-saved-content"
-  (should (equal "(\"commit1\" \"commit2\")"
-                 (goalie--prepare-content (list (goalie--commitment-c "commit1" :text "commit1")
-                                                (goalie--commitment-c "commit2" :text "commit2"))))))
