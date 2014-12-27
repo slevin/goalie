@@ -126,6 +126,9 @@
 (defmethod goalie--commit-marker-complete ((obj goalie--external-emacs))
   " [*] ")
 
+(defmethod goalie--current-time ((obj goalie--external-emacs))
+  (current-time))
+
 ;; ---------------------------------------------------------
 ;; Interaction Code (The Sauce)
 ;; ---------------------------------------------------------
@@ -157,7 +160,8 @@
 (defun goalie--prompt-for-commitment ()
   (let* ((new-commit (goalie--prompt-for-new-commitment goalie--interface)))
     (with-goalie-state-update
-     (goalie--add-commitment goalie--existing-commitments
+     (goalie--add-commitment goalie--interface
+                             goalie--existing-commitments
                              new-commit))))
 
 (defun goalie--request-delete ()
@@ -214,7 +218,9 @@
   ((text :initarg :text
          :type string)
    (completed :initarg :completed
-              :initform nil)))
+              :initform nil)
+   (commit-time :initarg :commit-time
+                :initform nil)))
 
 
 (defun goalie--build-commit-lines (commitments current-hilight-index)
@@ -249,8 +255,10 @@
                   com)
                 commits))
 
-(defun goalie--add-commitment (existing new)
-  (append existing (list (goalie--commitment-c new :text new))))
+(defun goalie--add-commitment (interface existing new)
+  (append existing (list (goalie--commitment-c new
+                                               :text new
+                                               :commit-time (goalie--current-time interface)))))
 
 (defun goalie--prev-index (currentindex existing-commitments)
   (cond ((= 0 (length existing-commitments)) 0)

@@ -8,6 +8,8 @@
 (defvar *new-commitments* nil)
 (defvar *delete-prompted* nil)
 
+(defvar *test-time* (current-time))
+
 (defun testhi (text) text)
 
 (defclass goalie--external-test () ()
@@ -36,6 +38,9 @@
 
 (defmethod goalie--hilight-fun ((obj goalie--external-test) text)
   text)
+
+(defmethod goalie--current-time ((obj goalie--external-test))
+  *test-time*)
 
 (defmacro with-my-fixture (&rest body)
   `(progn
@@ -127,6 +132,14 @@
     (should (equal #'goalie--commit-marker (oref cl commit-marker-fun)))))
 
 ;;; Simpler function tests
+
+(ert-deftest add-commitment ()
+  (let* ((interface (make-instance 'goalie--external-test))
+         (new-cs (goalie--add-commitment interface
+                                         '()
+                                         "newcommit")))
+    (should (equal *test-time* (oref (car new-cs) commit-time)))))
+
 
 (ert-deftest toggle-complete ()
   "goalie--toggle-complete"
