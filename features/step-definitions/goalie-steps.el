@@ -19,7 +19,7 @@
 
 (Then "\"\\([^\"]+\\)\" should be a commitment"
       (lambda (new-commitment)
-        (cl-assert (s-matches? (concat "[[:space:]]*\\[[[:space:]]\\][[:space:]]*" new-commitment) (buffer-string)))))
+        (cl-assert (s-matches? (concat "[[:space:]]*\\[[[:space:]]\\][[:space:]]*" new-commitment "[[:space:]]*(\\(Monday\\|Tuesday\\|Wednesday\\|Thursday\\|Friday\\|Saturday\\|Sunday\\))") (buffer-string)))))
 
 (Then "\"\\([^\"]+\\)\" should not be a commitment"
       (lambda (new-commitment)

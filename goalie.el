@@ -82,7 +82,7 @@
                            external-interface)
                   (funcall (oref line hilight-fun)
                            external-interface
-                           (oref line text))
+                           (concat (oref line text) "(Friday)"))
                   "\n")))
 
 (defmethod goalie--hilight-fun ((obj goalie--external-emacs) text)
