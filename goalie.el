@@ -77,12 +77,18 @@
                   (funcall hilight-fun external-interface text)
                   "\n")))
 
+(defun goalie--format-commit-date (date)
+  (format-time-string "(%A)" date)
+  )
+
 (defun goalie--insert-line (external-interface line)
   (insert (concat (funcall (oref line commit-marker-fun)
                            external-interface)
                   (funcall (oref line hilight-fun)
                            external-interface
-                           (concat (oref line text) "(Friday)"))
+                           (concat (oref line text)
+                                   " "
+                                   (goalie--format-commit-date (oref line commit-time))))
                   "\n")))
 
 (defmethod goalie--hilight-fun ((obj goalie--external-emacs) text)
