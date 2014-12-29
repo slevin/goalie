@@ -212,7 +212,8 @@
   ((text :initarg :text
          :type string)
    (hilight-fun :initarg :hilight-fun)
-   (commit-marker-fun :initarg :commit-marker-fun)))
+   (commit-marker-fun :initarg :commit-marker-fun)
+   (commit-time :initarg :commit-time :initform nil)))
 
 (defclass goalie--commitment-c ()
   ((text :initarg :text
@@ -229,7 +230,8 @@
                                   :text (oref commit text)
                                   :hilight-fun (goalie--get-hilight-fun
                                                 (equal idx current-hilight-index))
-                                  :commit-marker-fun (if (oref commit completed) #'goalie--commit-marker-complete #'goalie--commit-marker)))
+                                  :commit-marker-fun (if (oref commit completed) #'goalie--commit-marker-complete #'goalie--commit-marker)
+                                  :commit-time (oref commit commit-time)))
                 commitments))
 
 

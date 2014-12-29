@@ -57,7 +57,7 @@
 
 (ert-deftest start-reads-in-saved-content ()
   "read in content"
-  (setq saved-content-string "([object goalie--commitment-c \"commit1\" \"commit1\" t])")
+  (setq saved-content-string "([object goalie--commitment-c \"commit1\" \"commit1\" t nil])")
   (with-my-fixture
    (let ((cl1 (car *goalie-render-commitments*)))
      (should (equal "commit1" (oref cl1 text)))
@@ -114,22 +114,23 @@
         (cl (car (goalie--build-commit-lines coms 0))))
     (should (equal #'goalie--commit-marker-complete (oref cl commit-marker-fun)))))
 
-(ert-deftest build-add-line-hi ()
-  "add commitment line is hilighted line"
+(ert-deftest build--line-hi ()
+  "first commitment line is hilighted line"
   (let* ((coms (list (goalie--commitment-c "commit1" :text "commit1")
                      (goalie--commitment-c "commit2" :text "commit2")))
-         (cl (car (goalie--build-commit-lines coms 0))))
+         (cl (car (goalie--build-commit-lines coms 0)))
+         (cl2 (cadr (goalie--build-commit-lines coms 0))))
     (should (equal #'goalie--hilight-fun (oref cl hilight-fun)))
     (should (equal #'goalie--commit-marker (oref cl commit-marker-fun)))
+    (should (equal #'goalie--non-hilight (oref cl2 hilight-fun)))
     ))
 
-(ert-deftest build-add-line-nonhi ()
-  "add commitment line is not hilighted"
-  (let* ((coms (list (goalie--commitment-c "commit1" :text "commit1")
-                     (goalie--commitment-c "commit2" :text "commit2")))
+(ert-deftest build--line-commit-time ()
+  "commitment time passes to line"
+  (let* ((time (current-time))
+         (coms (list (goalie--commitment-c "commit1" :text "commit1" :commit-time time)))
          (cl (car (goalie--build-commit-lines coms 1))))
-    (should (equal #'goalie--non-hilight (oref cl hilight-fun)))
-    (should (equal #'goalie--commit-marker (oref cl commit-marker-fun)))))
+    (should (equal time (oref cl commit-time)))))
 
 ;;; Simpler function tests
 
