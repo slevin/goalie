@@ -163,6 +163,11 @@
    (goalie--toggle-complete goalie--current-hilight-index
                             goalie--existing-commitments)))
 
+(defun goalie--line-to-commitment (index lines commitments)
+  ;; find line
+  ;; find commitment - either a hash or
+  )
+
 (defun goalie--prompt-for-commitment ()
   (let* ((new-commit (goalie--prompt-for-new-commitment goalie--interface)))
     (with-goalie-state-update
