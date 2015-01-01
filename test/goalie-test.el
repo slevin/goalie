@@ -134,6 +134,16 @@
 
 ;;; Simpler function tests
 
+(ert-deftest index-to-commitment ()
+  "given index into lines, should get the corresponding commitment"
+  (let* ((c1 (goalie--commitment-c "c1" :text "c1"))
+         (c2 (goalie--commitment-c "c2" :text "c2"))
+         (coms (list c1 c2))
+         (lines (goalie--build-commit-lines coms 1)))
+    (should (equal c1 (goalie--index-to-commitment 0 lines coms)))
+    (should (equal c2 (goalie--index-to-commitment 1 lines coms)))))
+
+
 (ert-deftest add-commitment ()
   (let* ((interface (make-instance 'goalie--external-test))
          (new-cs (goalie--add-commitment interface

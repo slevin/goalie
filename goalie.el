@@ -163,9 +163,13 @@
    (goalie--toggle-complete goalie--current-hilight-index
                             goalie--existing-commitments)))
 
-(defun goalie--line-to-commitment (index lines commitments)
-  ;; find line
-  ;; find commitment - either a hash or
+(defun goalie--index-to-commitment (index lines commitments)
+  (-map-indexed (lambda (idx ln)
+                  (if (= idx index)
+                      (goalie--line-to-commitment ln commitments)))
+                lines))
+
+(defun goalie--line-to-commitment (line commitments)
   )
 
 (defun goalie--prompt-for-commitment ()
