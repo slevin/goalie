@@ -125,12 +125,19 @@
     (should (equal #'goalie--non-hilight (oref cl2 hilight-fun)))
     ))
 
-(ert-deftest build--line-commit-time ()
+(ert-deftest build-line-commit-time ()
   "commitment time passes to line"
   (let* ((time (current-time))
          (coms (list (goalie--commitment-c "commit1" :text "commit1" :commit-time time)))
          (cl (car (goalie--build-commit-lines coms 1))))
     (should (equal time (oref cl commit-time)))))
+
+(ert-deftest line-has-commitment ()
+  "line gets built with commitment pointer"
+  (let* ((c1 (goalie--commitment-c "c1" :text "c1"))
+         (coms (list c1))
+         (l1 (car (goalie--build-commit-lines coms 0))))
+    (should (equal c1 (oref l1 commitment)))))
 
 ;;; Simpler function tests
 
@@ -140,8 +147,8 @@
          (c2 (goalie--commitment-c "c2" :text "c2"))
          (coms (list c1 c2))
          (lines (goalie--build-commit-lines coms 1)))
-    (should (equal c1 (goalie--index-to-commitment 0 lines coms)))
-    (should (equal c2 (goalie--index-to-commitment 1 lines coms)))))
+    (should (equal c1 (goalie--index-to-commitment 0 lines)))
+    (should (equal c2 (goalie--index-to-commitment 1 lines)))))
 
 
 (ert-deftest add-commitment ()

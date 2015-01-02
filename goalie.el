@@ -163,14 +163,8 @@
    (goalie--toggle-complete goalie--current-hilight-index
                             goalie--existing-commitments)))
 
-(defun goalie--index-to-commitment (index lines commitments)
-  (-map-indexed (lambda (idx ln)
-                  (if (= idx index)
-                      (goalie--line-to-commitment ln commitments)))
-                lines))
-
-(defun goalie--line-to-commitment (line commitments)
-  )
+(defun goalie--index-to-commitment (index lines)
+  (oref (nth index lines) commitment))
 
 (defun goalie--prompt-for-commitment ()
   (let* ((new-commit (goalie--prompt-for-new-commitment goalie--interface)))
@@ -228,7 +222,8 @@
          :type string)
    (hilight-fun :initarg :hilight-fun)
    (commit-marker-fun :initarg :commit-marker-fun)
-   (commit-time :initarg :commit-time :initform nil)))
+   (commit-time :initarg :commit-time :initform nil)
+   (commitment :initarg :commitment :initform nil)))
 
 (defclass goalie--commitment-c ()
   ((text :initarg :text
@@ -246,7 +241,8 @@
                                   :hilight-fun (goalie--get-hilight-fun
                                                 (equal idx current-hilight-index))
                                   :commit-marker-fun (if (oref commit completed) #'goalie--commit-marker-complete #'goalie--commit-marker)
-                                  :commit-time (oref commit commit-time)))
+                                  :commit-time (oref commit commit-time)
+                                  :commitment commit))
                 commitments))
 
 
