@@ -174,12 +174,17 @@
                              goalie--existing-commitments
                              new-commit))))
 
+(defun goalie--current-commitment ()
+  (goalie--index-to-commitment goalie--current-hilight-index
+                               goalie--current-lines))
+
 (defun goalie--request-delete ()
   (if (> (length goalie--existing-commitments) 0)
       (if (goalie--prompt-for-delete goalie--interface)
           (with-goalie-state-update
-           (-remove-at goalie--current-hilight-index
-                       goalie--existing-commitments)))))
+           (let ((commitment (goalie--current-commitment)))
+             (-remove (lambda (item) (equal item commitment))
+                      goalie--existing-commitments))))))
 
 (defun goalie--move-previous ()
   (goalie--move #'goalie--prev-index))
@@ -190,11 +195,9 @@
 (defun goalie--move (movefun)
   (setq goalie--current-hilight-index (funcall movefun
                                                goalie--current-hilight-index
-                                               goalie--existing-commitments))
-  (setq goalie--current-lines (goalie--build-commit-lines goalie--existing-commitments goalie--current-hilight-index))
-  (goalie--prepare-and-save-content goalie--existing-commitments)
-  (goalie--render-ui goalie--interface
-                     goalie--current-lines))
+                                               goalie--current-lines))
+  (with-goalie-state-update
+   goalie--existing-commitments)) ;; no change but update ui
 
 (defvar goalie--existing-commitments '())
 (defvar goalie--interface '())
@@ -272,15 +275,15 @@
                                                :text new
                                                :commit-time (goalie--current-time interface)))))
 
-(defun goalie--prev-index (currentindex existing-commitments)
-  (cond ((= 0 (length existing-commitments)) 0)
+(defun goalie--prev-index (currentindex lines)
+  (cond ((= 0 (length lines)) 0)
         ((or (null currentindex) (equal 0 currentindex)) 0)
-        ((>= currentindex (length existing-commitments)) (1- (length existing-commitments)))
+        ((>= currentindex (length lines)) (1- (length lines)))
         (t (1- currentindex))))
 
-(defun goalie--next-index (currentindex existing-commitments)
-  (cond ((= 0 (length existing-commitments)) 0)
-        ((= currentindex (1- (length existing-commitments))) currentindex)
+(defun goalie--next-index (currentindex lines)
+  (cond ((= 0 (length lines)) 0)
+        ((= currentindex (1- (length lines))) currentindex)
         (t (1+ currentindex))))
 
 (defun goalie--parse-saved-content (content-string)
