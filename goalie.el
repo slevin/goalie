@@ -154,14 +154,15 @@
 (defmacro with-goalie-state-update (new-state-code)
   `(progn
      (setq goalie--existing-commitments ,new-state-code)
+     (setq goalie--current-lines (goalie--build-commit-lines goalie--existing-commitments goalie--current-hilight-index))
      (goalie--prepare-and-save-content goalie--existing-commitments)
-     (goalie--render-ui goalie--interface
-                        (goalie--build-commit-lines goalie--existing-commitments goalie--current-hilight-index))))
+     (goalie--render-ui goalie--interface goalie--current-lines)))
 
 (defun goalie--handle-execute ()
   (with-goalie-state-update
-   (goalie--toggle-complete goalie--current-hilight-index
-                            goalie--existing-commitments)))
+   (progn
+     (goalie--toggle-complete (goalie--index-to-commitment goalie--current-hilight-index goalie--current-lines))
+     goalie--existing-commitments)))
 
 (defun goalie--index-to-commitment (index lines)
   (oref (nth index lines) commitment))
@@ -190,13 +191,15 @@
   (setq goalie--current-hilight-index (funcall movefun
                                                goalie--current-hilight-index
                                                goalie--existing-commitments))
+  (setq goalie--current-lines (goalie--build-commit-lines goalie--existing-commitments goalie--current-hilight-index))
   (goalie--prepare-and-save-content goalie--existing-commitments)
   (goalie--render-ui goalie--interface
-                     (goalie--build-commit-lines goalie--existing-commitments goalie--current-hilight-index)))
+                     goalie--current-lines))
 
 (defvar goalie--existing-commitments '())
 (defvar goalie--interface '())
 (defvar goalie--current-hilight-index 0)
+(defvar goalie--current-lines '())
 
 (defun goalie-start (interface)
   (setq goalie--interface interface)
@@ -261,12 +264,8 @@
         #'goalie--commit-marker-complete
       #'goalie--non-commit-marker)))
 
-(defun goalie--toggle-complete (index commits)
-  (-map-indexed (lambda (idx com)
-                  (if (= idx index)
-                      (oset com completed (not (oref com completed))))
-                  com)
-                commits))
+(defun goalie--toggle-complete (commit)
+  (oset commit completed (not (oref commit completed))))
 
 (defun goalie--add-commitment (interface existing new)
   (append existing (list (goalie--commitment-c new

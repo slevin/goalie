@@ -162,10 +162,10 @@
 (ert-deftest toggle-complete ()
   "goalie--toggle-complete"
   (let* ((coms (list (goalie--commitment-c "commit1" :text "commit1")
-                     (goalie--commitment-c "commit2" :text "commit2")))
-         (new (goalie--toggle-complete 1 coms)))
-    (should (equal nil (oref (car new) completed)))
-    (should (equal t (oref (cadr new) completed)))))
+                     (goalie--commitment-c "commit2" :text "commit2"))))
+    (goalie--toggle-complete (car coms))
+    (should (equal t (oref (car coms) completed)))
+    (should (equal nil (oref (cadr coms) completed)))))
 
 
 
