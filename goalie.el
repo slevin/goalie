@@ -33,7 +33,8 @@
     (define-key map (kbd "p") 'goalie-goto-previous)
     (define-key map (kbd "d") 'goalie-delete-commitment)
     (define-key map (kbd "a") 'goalie-add-commitment)
-    (define-key map (kbd "RET") 'goalie-execute)
+    (define-key map (kbd "RET") 'goalie-complete)
+    (define-key map (kbd "s") 'goalie-skip)
     map)
   "Goalie key map.")
 
@@ -50,9 +51,9 @@
   (interactive)
   (goalie--move-previous))
 
-(defun goalie-execute ()
+(defun goalie-complete ()
   (interactive)
-  (goalie--handle-execute))
+  (goalie--handle-complete))
 
 (defun goalie-add-commitment ()
   (interactive)
@@ -61,6 +62,10 @@
 (defun goalie-delete-commitment ()
   (interactive)
   (goalie--request-delete))
+
+(defun goalie-skip ()
+  (interactive)
+  (goalie--skip))
 
 
 (defclass goalie--external-emacs () ()
@@ -132,6 +137,9 @@
 (defmethod goalie--commit-marker-complete ((obj goalie--external-emacs))
   " [*] ")
 
+(defmethod goalie--commit-marker-skip ((obj goalie--external-emacs))
+  " [-] ")
+
 (defmethod goalie--current-time ((obj goalie--external-emacs))
   (current-time))
 
@@ -158,11 +166,18 @@
      (goalie--prepare-and-save-content goalie--existing-commitments)
      (goalie--render-ui goalie--interface goalie--current-lines)))
 
-(defun goalie--handle-execute ()
+(defun goalie--handle-complete ()
   (with-goalie-state-update
    (progn
-     (goalie--toggle-complete (goalie--index-to-commitment goalie--current-hilight-index goalie--current-lines))
+     (goalie--toggle-complete (goalie--current-commitment))
      goalie--existing-commitments)))
+
+(defun goalie--skip ()
+  (with-goalie-state-update
+   (progn
+     (goalie--toggle-skip (goalie--current-commitment))
+     goalie--existing-commitments)))
+
 
 (defun goalie--index-to-commitment (index lines)
   (oref (nth index lines) commitment))
@@ -246,7 +261,7 @@
                                   :text (oref commit text)
                                   :hilight-fun (goalie--get-hilight-fun
                                                 (equal idx current-hilight-index))
-                                  :commit-marker-fun (if (oref commit completed) #'goalie--commit-marker-complete #'goalie--commit-marker)
+                                  :commit-marker-fun (goalie--get-commit-marker-fun (oref commit completed))
                                   :commit-time (oref commit commit-time)
                                   :commitment commit))
                 commitments))
@@ -261,14 +276,23 @@
   text)
 
 (defun goalie--get-commit-marker-fun (commit)
-  (if (equal commit 'commit)
+  (if (equal commit nil)
       #'goalie--commit-marker
     (if (equal commit 'complete)
         #'goalie--commit-marker-complete
-      #'goalie--non-commit-marker)))
+      (if (equal commit 'skip)
+          #'goalie--commit-marker-skip
+        #'goalie--non-commit-marker))))
 
 (defun goalie--toggle-complete (commit)
-  (oset commit completed (not (oref commit completed))))
+  (if (equal (oref commit completed) 'complete)
+      (oset commit completed nil)
+    (oset commit completed 'complete)))
+
+(defun goalie--toggle-skip (commit)
+  (if (equal (oref commit completed) 'skip)
+      (oset commit completed nil)
+    (oset commit completed 'skip)))
 
 (defun goalie--add-commitment (interface existing new)
   (append existing (list (goalie--commitment-c new

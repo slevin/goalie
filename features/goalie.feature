@@ -74,6 +74,18 @@ Feature: Completeting
   Scenario: Add, complete
     Given I start Goalie
     And I add commitment "commit1"
-    And I move previous
     And I mark current as complete
     Then "commit1" should be a completed commitment
+
+  Scenario: Add, skip
+    Given I start Goalie
+    And I add commitment "commit1"
+    When I mark current as skip
+    Then "commit1" should be a skipped commitment
+
+  Scenario: Change
+    Given I start Goalie
+    And I add commitment "commit1"
+    And I mark current as complete
+    When I mark current as skip
+    Then "commit1" should be a skipped commitment

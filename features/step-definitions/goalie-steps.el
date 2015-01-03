@@ -75,6 +75,16 @@
         (When "I press \"RET\"")
         (When "I execute the action chain")))
 
+(When "I mark current as skip"
+      (lambda ()
+        (When "I start an action chain")
+        (When "I press \"s\"")
+        (When "I execute the action chain")))
+
 (Then "^\"\\([^\"]+\\)\" should be a completed commitment$"
       (lambda (arg)
         (cl-assert (s-matches? (concat "[[:space:]]*\\[\\*\\][[:space:]]*" arg) (buffer-string)))))
+
+(Then "^\"\\([^\"]+\\)\" should be a skipped commitment$"
+      (lambda (arg)
+        (cl-assert (s-matches? (concat "[[:space:]]*\\[\\-\\][[:space:]]*" arg) (buffer-string)))))

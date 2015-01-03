@@ -57,7 +57,7 @@
 
 (ert-deftest start-reads-in-saved-content ()
   "read in content"
-  (setq saved-content-string "([object goalie--commitment-c \"commit1\" \"commit1\" t nil])")
+  (setq saved-content-string "([object goalie--commitment-c \"commit1\" \"commit1\" complete nil])")
   (with-my-fixture
    (let ((cl1 (car *goalie-render-commitments*)))
      (should (equal "commit1" (oref cl1 text)))
@@ -110,7 +110,7 @@
 
 (ert-deftest build-complete-line ()
   "a completed commitment should have a renderable completed line"
-  (let* ((coms (list (goalie--commitment-c "c1" :text "c1" :completed t)))
+  (let* ((coms (list (goalie--commitment-c "c1" :text "c1" :completed 'complete)))
         (cl (car (goalie--build-commit-lines coms 0))))
     (should (equal #'goalie--commit-marker-complete (oref cl commit-marker-fun)))))
 
@@ -161,13 +161,32 @@
 
 (ert-deftest toggle-complete ()
   "goalie--toggle-complete"
-  (let* ((coms (list (goalie--commitment-c "commit1" :text "commit1")
-                     (goalie--commitment-c "commit2" :text "commit2"))))
-    (goalie--toggle-complete (car coms))
-    (should (equal t (oref (car coms) completed)))
-    (should (equal nil (oref (cadr coms) completed)))))
+  (let* ((c1 (goalie--commitment-c "c1" :text "c1"))
+         (c2 (goalie--commitment-c "c2" :text "c2"))
+         (coms (list c1 c2)))
+    (should (equal nil (oref c1 completed))) ;; default is nil
+    (goalie--toggle-complete c1)
+    (should (equal 'complete (oref c1 completed)))
+    (goalie--toggle-complete c1)
+    (should (equal nil (oref c1 completed)))
+    (goalie--toggle-skip c1)
+    (goalie--toggle-complete c1)
+    (should (equal 'complete (oref c1 completed)))))
 
 
+(ert-deftest toggle-skip ()
+  "goalie--toggle-skip"
+  (let* ((c1 (goalie--commitment-c "c1" :text "c1"))
+         (c2 (goalie--commitment-c "c2" :text "c2"))
+         (coms (list c1 c2)))
+    (should (equal nil (oref c1 completed))) ;; default is nil
+    (goalie--toggle-skip c1)
+    (should (equal 'skip (oref c1 completed)))
+    (goalie--toggle-skip c1)
+    (should (equal nil (oref c1 completed)))
+    (goalie--toggle-complete c1)
+    (goalie--toggle-skip c1)
+    (should (equal 'skip (oref c1 completed)))))
 
 (ert-deftest line-class ()
   "goalie--line-c"
