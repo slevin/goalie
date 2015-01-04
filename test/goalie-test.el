@@ -111,34 +111,32 @@
 (ert-deftest build-complete-line ()
   "a completed commitment should have a renderable completed line"
   (let* ((coms (list (goalie--commitment-c "c1" :text "c1" :completed 'complete)))
-        (cl (car (goalie--build-commit-lines coms 0))))
+        (cl (car (goalie--build-commit-lines coms))))
     (should (equal #'goalie--commit-marker-complete (oref cl commit-marker-fun)))))
-
-(ert-deftest build--line-hi ()
-  "first commitment line is hilighted line"
-  (let* ((coms (list (goalie--commitment-c "commit1" :text "commit1")
-                     (goalie--commitment-c "commit2" :text "commit2")))
-         (cl (car (goalie--build-commit-lines coms 0)))
-         (cl2 (cadr (goalie--build-commit-lines coms 0))))
-    (should (equal #'goalie--hilight-fun (oref cl hilight-fun)))
-    (should (equal #'goalie--commit-marker (oref cl commit-marker-fun)))
-    (should (equal #'goalie--non-hilight (oref cl2 hilight-fun)))
-    ))
 
 (ert-deftest build-line-commit-time ()
   "commitment time passes to line"
   (let* ((time (current-time))
          (coms (list (goalie--commitment-c "commit1" :text "commit1" :commit-time time)))
-         (cl (car (goalie--build-commit-lines coms 1))))
+         (cl (car (goalie--build-commit-lines coms))))
     (should (equal time (oref cl commit-time)))))
 
 (ert-deftest line-has-commitment ()
   "line gets built with commitment pointer"
   (let* ((c1 (goalie--commitment-c "c1" :text "c1"))
          (coms (list c1))
-         (l1 (car (goalie--build-commit-lines coms 0))))
+         (l1 (car (goalie--build-commit-lines coms))))
     (should (equal c1 (oref l1 commitment)))))
 
+(ert-deftest line-hilights ()
+  "which line is hilighted"
+  (let* ((c1 (goalie--commitment-c "c1" :text "c1"))
+         (c2 (goalie--commitment-c "c2" :text "c2"))
+         (coms (list c1 c2))
+         (lines (goalie--build-commit-lines coms))
+         (hlines (goalie--update-line-hilight lines 1)))
+    (should (equal #'goalie--non-hilight (oref (car lines) hilight-fun)))
+    (should (equal #'goalie--hilight-fun (oref (cadr lines) hilight-fun)))))
 ;;; Simpler function tests
 
 (ert-deftest index-to-commitment ()
@@ -146,7 +144,7 @@
   (let* ((c1 (goalie--commitment-c "c1" :text "c1"))
          (c2 (goalie--commitment-c "c2" :text "c2"))
          (coms (list c1 c2))
-         (lines (goalie--build-commit-lines coms 1)))
+         (lines (goalie--build-commit-lines coms)))
     (should (equal c1 (goalie--index-to-commitment 0 lines)))
     (should (equal c2 (goalie--index-to-commitment 1 lines)))))
 

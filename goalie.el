@@ -162,7 +162,7 @@
 (defmacro with-goalie-state-update (new-state-code)
   `(progn
      (setq goalie--existing-commitments ,new-state-code)
-     (setq goalie--current-lines (goalie--build-commit-lines goalie--existing-commitments goalie--current-hilight-index))
+     (setq goalie--current-lines (goalie--update-line-hilight (goalie--build-commit-lines goalie--existing-commitments) goalie--current-hilight-index))
      (goalie--prepare-and-save-content goalie--existing-commitments)
      (goalie--render-ui goalie--interface goalie--current-lines)))
 
@@ -171,6 +171,13 @@
    (progn
      (goalie--toggle-complete (goalie--current-commitment))
      goalie--existing-commitments)))
+
+(defun goalie--update-line-hilight (lines index)
+  (-map-indexed (lambda (idx ln)
+                  (oset ln hilight-fun (goalie--get-hilight-fun
+                                        (equal idx index)))
+                  ln)
+                lines))
 
 (defun goalie--skip ()
   (with-goalie-state-update
@@ -255,12 +262,10 @@
                 :initform nil)))
 
 
-(defun goalie--build-commit-lines (commitments current-hilight-index)
+(defun goalie--build-commit-lines (commitments)
   (-map-indexed (lambda (idx commit)
                   (goalie--line-c "commit"
                                   :text (oref commit text)
-                                  :hilight-fun (goalie--get-hilight-fun
-                                                (equal idx current-hilight-index))
                                   :commit-marker-fun (goalie--get-commit-marker-fun (oref commit completed))
                                   :commit-time (oref commit commit-time)
                                   :commitment commit))
