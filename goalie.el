@@ -155,9 +155,20 @@
 (defmacro with-goalie-state-update (new-state-code)
   `(progn
      (setq goalie--existing-commitments ,new-state-code)
-     (setq goalie--current-lines (goalie--update-line-hilight (goalie--build-commit-lines goalie--existing-commitments) goalie--current-hilight-index))
+     (goalie--build-lines)
      (goalie--prepare-and-save-content goalie--existing-commitments)
-     (goalie--render-ui goalie--interface goalie--current-lines '())))
+     (goalie--render-ui goalie--interface goalie--current-lines goalie--past-lines)))
+
+(defun goalie--build-lines ()
+  (let* ((res (goalie--partition-commitments goalie--existing-commitments))
+         (current (goalie--build-commit-lines (car res)))
+         (past (goalie--build-commit-lines (cadr res))))
+    (setq goalie--current-lines current)
+    (setq goalie--past-lines past)
+    (goalie--update-line-hilight (goalie--all-lines) goalie--current-hilight-index)))
+
+(defun goalie--all-lines ()
+  (append goalie--current-lines goalie--past-lines))
 
 (defun goalie--handle-complete ()
   (with-goalie-state-update
@@ -178,6 +189,8 @@
      (goalie--toggle-skip (goalie--current-commitment))
      goalie--existing-commitments)))
 
+(defun goalie--partition-commitments (commits)
+  (list commits nil))
 
 (defun goalie--index-to-commitment (index lines)
   (oref (nth index lines) commitment))
@@ -191,7 +204,7 @@
 
 (defun goalie--current-commitment ()
   (goalie--index-to-commitment goalie--current-hilight-index
-                               goalie--current-lines))
+                               (goalie--all-lines)))
 
 (defun goalie--request-delete ()
   (if (> (length goalie--existing-commitments) 0)
@@ -210,7 +223,7 @@
 (defun goalie--move (movefun)
   (setq goalie--current-hilight-index (funcall movefun
                                                goalie--current-hilight-index
-                                               goalie--current-lines))
+                                               (goalie--all-lines)))
   (with-goalie-state-update
    goalie--existing-commitments)) ;; no change but update ui
 
@@ -218,6 +231,7 @@
 (defvar goalie--interface '())
 (defvar goalie--current-hilight-index 0)
 (defvar goalie--current-lines '())
+(defvar goalie--past-lines '())
 
 (defun goalie-start (interface)
   (setq goalie--interface interface)
