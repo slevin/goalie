@@ -96,6 +96,9 @@
                                    (goalie--format-commit-date (oref line commit-time))))
                   "\n")))
 
+(defun goalie--insert-lines (external-interface lines)
+  (mapc (lambda (each) (goalie--insert-line external-interface each)) lines))
+
 (defmethod goalie--hilight-fun ((obj goalie--external-emacs) text)
   (propertize text 'face '((:foreground "red"))))
 
@@ -103,13 +106,15 @@
   (let ((fline (propertize line 'face '((:foreground "medium sea green")))))
     (insert (concat fline "\n"))))
 
-(defmethod goalie--render-ui ((obj goalie--external-emacs) commit-ls)
+(defmethod goalie--render-ui ((obj goalie--external-emacs) commit-ls past-ls)
   (let ((inhibit-read-only t))
     (erase-buffer)
     (goalie--insert-header-line "Open Commitments")
-    (mapc (lambda (each) (goalie--insert-line obj each)) commit-ls)
+    (goalie--insert-lines obj commit-ls)
     (insert "\n")
-    (goalie--insert-header-line "Today's Commitments (Date goes here)")))
+    (goalie--insert-header-line "Past Commitments")
+    (goalie--insert-lines obj past-ls)
+    ))
 
 (defmethod goalie--prompt-for-new-commitment ((obj goalie--external-emacs))
   (read-string "What is your commitment? "))
@@ -147,24 +152,12 @@
 ;; Interaction Code (The Sauce)
 ;; ---------------------------------------------------------
 
-;; external interface for user interactions
-(defgeneric goalie--read-saved-content ())
-(defgeneric goalie--save-content (content-string))
-(defgeneric goalie--initialize-ui ())
-(defgeneric goalie--render-ui (commit hl))
-(defgeneric goalie--prompt-for-new-commitment ())
-(defgeneric goalie--prompt-for-delete ())
-(defgeneric goalie--hilight-fun (text))
-(defgeneric goalie--non-commit-marker ())
-(defgeneric goalie--commit-marker ())
-(defgeneric goalie--commit-marker-complete ())
-
 (defmacro with-goalie-state-update (new-state-code)
   `(progn
      (setq goalie--existing-commitments ,new-state-code)
      (setq goalie--current-lines (goalie--update-line-hilight (goalie--build-commit-lines goalie--existing-commitments) goalie--current-hilight-index))
      (goalie--prepare-and-save-content goalie--existing-commitments)
-     (goalie--render-ui goalie--interface goalie--current-lines)))
+     (goalie--render-ui goalie--interface goalie--current-lines '())))
 
 (defun goalie--handle-complete ()
   (with-goalie-state-update

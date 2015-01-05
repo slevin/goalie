@@ -9,6 +9,7 @@ Feature: Adding Commitments
     When I add commitment "commit1"
     Then "commit1" should be a commitment
     And "commit1" should be hilighted
+    And "commit1" should be a current commitment
 
   Scenario: I add multiple commitments
     Given I start Goalie
@@ -76,6 +77,7 @@ Feature: Completeting
     And I add commitment "commit1"
     And I mark current as complete
     Then "commit1" should be a completed commitment
+    And "commit1" should be a past commitment
 
   Scenario: Add, skip
     Given I start Goalie

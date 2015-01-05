@@ -5,6 +5,7 @@
 (defvar *goalie-saved-content* nil)
 (defvar *goalie-initialized* nil)
 (defvar *goalie-render-commitments* nil)
+(defvar *goalie-past-commitments* nil)
 (defvar *new-commitments* nil)
 (defvar *delete-prompted* nil)
 
@@ -24,8 +25,9 @@
 (defmethod goalie--initialize-ui ((obj goalie--external-test))
   (setq *goalie-initialized* t))
 
-(defmethod goalie--render-ui ((obj goalie--external-test) coms)
-  (setq *goalie-render-commitments* coms))
+(defmethod goalie--render-ui ((obj goalie--external-test) coms past-coms)
+  (setq *goalie-render-commitments* coms)
+  (setq *goalie-past-commitments* past-coms))
 
 (defmethod goalie--prompt-for-new-commitment ((obj goalie--external-test))
   (let ((return-commit (car *new-commitments*)))

@@ -88,3 +88,17 @@
 (Then "^\"\\([^\"]+\\)\" should be a skipped commitment$"
       (lambda (arg)
         (cl-assert (s-matches? (concat "[[:space:]]*\\[\\-\\][[:space:]]*" arg) (buffer-string)))))
+
+(defun goto-past-marker ()
+  (goto-char (point-max))
+  (re-search-backward "Past Commitments"))
+
+(Then "^\"\\([^\"]+\\)\" should be a current commitment$"
+      (lambda (arg)
+        (goto-past-marker)
+        (cl-assert (s-matches? arg (buffer-substring 1 (point))))))
+
+(Then "^\"\\([^\"]+\\)\" should be a past commitment$"
+      (lambda (arg)
+        (goto-past-marker)
+        (cl-assert (s-matches? arg (buffer-string) (point)))))
