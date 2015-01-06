@@ -61,7 +61,7 @@
   "read in content"
   (setq saved-content-string "([object goalie--commitment-c \"commit1\" \"commit1\" complete nil])")
   (with-my-fixture
-   (let ((cl1 (car *goalie-render-commitments*)))
+   (let ((cl1 (car *goalie-past-commitments*)))
      (should (equal "commit1" (oref cl1 text)))
      (should (equal #'goalie--commit-marker-complete (oref cl1 commit-marker-fun))))))
 
@@ -140,6 +140,20 @@
     (should (equal #'goalie--non-hilight (oref (car lines) hilight-fun)))
     (should (equal #'goalie--hilight-fun (oref (cadr lines) hilight-fun)))))
 ;;; Simpler function tests
+
+(ert-deftest partition-commitments ()
+  "puts completed commitments into separate bucket"
+  (let* ((c1 (goalie--commitment-c "c1" :text "c1" :completed 'complete))
+         (c2 (goalie--commitment-c "c2" :text "c2" :completed 'skip))
+         (c3 (goalie--commitment-c "c3" :text "c3" :completed nil))
+         (coms (list c1 c2 c3))
+         (parts (goalie--partition-commitments coms))
+         (current (nth 0 parts))
+         (past (nth 1 parts)))
+    (should (equal c3 (nth 0 current))) ; current list
+    (should (equal c1 (nth 0 past))) ; complete in past list
+    (should (equal c2 (nth 1 past))) ; skip in past list
+    ))
 
 (ert-deftest index-to-commitment ()
   "given index into lines, should get the corresponding commitment"

@@ -190,7 +190,7 @@
      goalie--existing-commitments)))
 
 (defun goalie--partition-commitments (commits)
-  (list commits nil))
+  (--separate (null (oref it completed)) commits))
 
 (defun goalie--index-to-commitment (index lines)
   (oref (nth index lines) commitment))
