@@ -57,7 +57,7 @@
 
 (defun goalie-add-commitment ()
   (interactive)
-  (goalie--prompt-for-commitment))
+  (goalie--prompt-for-commitment (current-time)))
 
 (defun goalie-delete-commitment ()
   (interactive)
@@ -145,9 +145,6 @@
 (defmethod goalie--commit-marker-skip ((obj goalie--external-emacs))
   " [-] ")
 
-(defmethod goalie--current-time ((obj goalie--external-emacs))
-  (current-time))
-
 ;; ---------------------------------------------------------
 ;; Interaction Code (The Sauce)
 ;; ---------------------------------------------------------
@@ -195,12 +192,12 @@
 (defun goalie--index-to-commitment (index lines)
   (oref (nth index lines) commitment))
 
-(defun goalie--prompt-for-commitment ()
+(defun goalie--prompt-for-commitment (time)
   (let* ((new-commit (goalie--prompt-for-new-commitment goalie--interface)))
     (with-goalie-state-update
-     (goalie--add-commitment goalie--interface
-                             goalie--existing-commitments
-                             new-commit))))
+     (goalie--add-commitment goalie--existing-commitments
+                             new-commit
+                             time))))
 
 (defun goalie--current-commitment ()
   (goalie--index-to-commitment goalie--current-hilight-index
@@ -306,10 +303,10 @@
       (oset commit completed nil)
     (oset commit completed 'skip)))
 
-(defun goalie--add-commitment (interface existing new)
+(defun goalie--add-commitment (existing new time)
   (append existing (list (goalie--commitment-c new
                                                :text new
-                                               :commit-time (goalie--current-time interface)))))
+                                               :commit-time time))))
 
 (defun goalie--prev-index (currentindex lines)
   (cond ((= 0 (length lines)) 0)

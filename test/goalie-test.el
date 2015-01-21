@@ -68,15 +68,15 @@
 (ert-deftest add-renders-new ()
   "After adding commitment it should show up in today list hilighted"
   (with-my-fixture
-   (goalie--prompt-for-commitment)
+   (goalie--prompt-for-commitment (current-time))
    (should (equal "commit1" (oref (car *goalie-render-commitments*) text)))
    (should (equal #'goalie--hilight-fun (oref (car *goalie-render-commitments*) hilight-fun)))))
 
 (ert-deftest add-multiple-renders-multiple ()
   "adding multiple times should return multiple"
   (with-my-fixture
-   (goalie--prompt-for-commitment)
-   (goalie--prompt-for-commitment)
+   (goalie--prompt-for-commitment (current-time))
+   (goalie--prompt-for-commitment (current-time))
    (let ((c1 (car *goalie-render-commitments*))
          (c2 (cadr *goalie-render-commitments*)))
      (should (equal "commit1" (oref c1 text)))
@@ -85,8 +85,8 @@
 (ert-deftest add-commits-saves-state ()
   "After adding content is saved through save function"
   (with-my-fixture
-   (goalie--prompt-for-commitment)
-   (goalie--prompt-for-commitment)
+   (goalie--prompt-for-commitment (current-time))
+   (goalie--prompt-for-commitment (current-time))
    (should (not (null *goalie-saved-content*)))))
 
 (ert-deftest delete-nothing ()
@@ -99,8 +99,8 @@
 (ert-deftest delete-something ()
   "if something is hilighted then it should prompt for it and delete it"
   (with-my-fixture
-   (goalie--prompt-for-commitment)
-   (goalie--prompt-for-commitment)
+   (goalie--prompt-for-commitment (current-time))
+   (goalie--prompt-for-commitment (current-time))
    (goalie--move-previous)
    (goalie--move-previous)
    (setq delete-prompt-return t)
@@ -167,9 +167,9 @@
 
 (ert-deftest add-commitment ()
   (let* ((interface (make-instance 'goalie--external-test))
-         (new-cs (goalie--add-commitment interface
-                                         '()
-                                         "newcommit")))
+         (new-cs (goalie--add-commitment '()
+                                         "newcommit"
+                                         *test-time*)))
     (should (equal *test-time* (oref (car new-cs) commit-time)))))
 
 
