@@ -139,7 +139,21 @@
          (hlines (goalie--update-line-hilight lines 1)))
     (should (equal #'goalie--non-hilight (oref (car lines) hilight-fun)))
     (should (equal #'goalie--hilight-fun (oref (cadr lines) hilight-fun)))))
+
+(ert-deftest hide-old ()
+  "older commitments disappear"
+
+  ;; lines is two buckets I guess
+  )
+
 ;;; Simpler function tests
+
+(ert-deftest filter-old ()
+  (let* ((l1 (goalie--add-commitment '() "c1" (current-time)))
+         (l2 (goalie--add-commitment l1 "c2" (time-subtract (current-time) xdays)))
+         (after (goalie--exclude-old-lines l2)))
+    (should (equal 1 (length after)))
+    (should (equal "c1" (oref (car after) text)))))
 
 (ert-deftest partition-commitments ()
   "puts completed commitments into separate bucket"

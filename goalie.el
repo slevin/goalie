@@ -164,6 +164,10 @@
     (setq goalie--past-lines past)
     (goalie--update-line-hilight (goalie--all-lines) goalie--current-hilight-index)))
 
+(defun goalie--exclude-old-lines (lines)
+  (--filter ())
+  )
+
 (defun goalie--all-lines ()
   (append goalie--current-lines goalie--past-lines))
 
