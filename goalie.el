@@ -164,9 +164,12 @@
     (setq goalie--past-lines past)
     (goalie--update-line-hilight (goalie--all-lines) goalie--current-hilight-index)))
 
-(defun goalie--exclude-old-lines (lines)
-  (--filter ())
-  )
+(defun goalie--days-before (time days)
+  (time-subtract time (seconds-to-time (* 60 60 24 days))))
+
+(defun goalie--exclude-old-lines (lines before-time)
+  (--filter (time-less-p before-time (oref it commit-time)) lines))
+
 
 (defun goalie--all-lines ()
   (append goalie--current-lines goalie--past-lines))
@@ -233,6 +236,7 @@
 (defvar goalie--current-hilight-index 0)
 (defvar goalie--current-lines '())
 (defvar goalie--past-lines '())
+(defvar goalie--too-old-days 3)
 
 (defun goalie-start (interface)
   (setq goalie--interface interface)

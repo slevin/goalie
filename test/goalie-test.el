@@ -150,8 +150,8 @@
 
 (ert-deftest filter-old ()
   (let* ((l1 (goalie--add-commitment '() "c1" (current-time)))
-         (l2 (goalie--add-commitment l1 "c2" (time-subtract (current-time) xdays)))
-         (after (goalie--exclude-old-lines l2)))
+         (l2 (goalie--add-commitment l1 "c2" (goalie--days-before (current-time) (+ goalie--too-old-days 1))))
+         (after (goalie--exclude-old-lines l2 (goalie--days-before (current-time) goalie--too-old-days))))
     (should (equal 1 (length after)))
     (should (equal "c1" (oref (car after) text)))))
 
