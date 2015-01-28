@@ -161,7 +161,7 @@
          (current (goalie--build-commit-lines (car res)))
          (past (goalie--build-commit-lines (cadr res))))
     (setq goalie--current-lines current)
-    (setq goalie--past-lines past)
+    (setq goalie--past-lines (goalie--exclude-old-lines past (goalie--days-before (current-time) goalie--too-old-days)))
     (goalie--update-line-hilight (goalie--all-lines) goalie--current-hilight-index)))
 
 (defun goalie--days-before (time days)
