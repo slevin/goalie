@@ -59,7 +59,7 @@
 
 (ert-deftest start-reads-in-saved-content ()
   "read in content"
-  (setq saved-content-string "([object goalie--commitment-c \"commit1\" \"commit1\" complete nil])")
+  (setq saved-content-string "([object goalie--commitment-c \"commit1\" \"commit1\" complete (21704 65311 93316 0)])")
   (with-my-fixture
    (let ((cl1 (car *goalie-past-commitments*)))
      (should (equal "commit1" (oref cl1 text)))
@@ -142,9 +142,13 @@
 
 (ert-deftest hide-old ()
   "older commitments disappear"
-
-  ;; lines is two buckets I guess
-  )
+  (let* ((l1 (goalie--add-commitment '() "c1" (goalie--days-before (current-time) (- goalie--too-old-days 1))))
+         (l2 (goalie--add-commitment l1 "c2" (goalie--days-before (current-time) (+ goalie--too-old-days 1)))))
+    (mapc #'goalie--toggle-complete l2) ; mark as complete so they show in past
+    (setq goalie--existing-commitments l2)
+    (goalie--build-lines) ; should filter the oldest one
+    (should (equal 1 (length goalie--past-lines)))
+    ))
 
 ;;; Simpler function tests
 

@@ -168,7 +168,8 @@
   (time-subtract time (seconds-to-time (* 60 60 24 days))))
 
 (defun goalie--exclude-old-lines (lines before-time)
-  (--filter (time-less-p before-time (oref it commit-time)) lines))
+  (--filter (let ((tm (oref it commit-time)))
+              (and tm (time-less-p before-time tm))) lines))
 
 
 (defun goalie--all-lines ()
